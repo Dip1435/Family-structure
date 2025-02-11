@@ -1,0 +1,129 @@
+{
+  "family1": {
+    "id": 1,
+    "name": "Grandpa",
+    "partner": "Grandma",
+    "children": [
+      {
+        "name": "Father",
+        "partner": "Mother",
+        "children": [
+          {
+            "name": "Son",
+            "partner": "Son's wife",
+            "children": [
+              {
+                "name": "Grandson"
+              },
+              {
+                "name": "Granddaughter"
+              }
+            ]
+          },
+          {
+            "name": "Daughter",
+            "partner": "Daughter's husband",
+            "children": [
+              {
+                "name": "Grandson"
+              },
+              {
+                "name": "Granddaughter"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Uncle",
+        "partner": "Aunt",
+        "children": [
+          {
+            "name": "Son",
+            "partner": "Son's wife",
+            "children": [
+              {
+                "name": "Granddaughter"
+              },
+              {
+                "name": "Grandson"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "family2": {
+    "id": 2,
+    "name": "Grandpa & Grandma",
+    "children": [
+      {
+        "id": 2,
+        "name": "Daughter",
+        "children": [
+          {
+            "id": 3,
+            "name": "Son's wife",
+            "children": [
+              {
+                "id": 4,
+                "name": "Grandson"
+              },
+              {
+                "id": 5,
+                "name": "Granddaughter"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": 6,
+        "name": "Daughter",
+        "children": [
+          {
+            "id": 7,
+            "name": "Son in Law",
+            "children": [
+              {
+                "id": 8,
+                "name": "Granddaughter"
+              },
+              {
+                "id": 9,
+                "name": "Grandson",
+                "children": [
+                  {
+                    "id": 10,
+                    "name": "Grandson's Wife",
+                    "children": [
+                      {
+                        "id": 11,
+                        "name": "Great Grandchild"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "family3": {},
+  "family4": {},
+  "family5": {},
+  "family6": {},
+  "family7": {},
+  "family8": {},
+  "family9": {},
+  "family10": {},
+  "family11": {},
+  "family12": {},
+  "family13": {},
+  "family14": {},
+  "family15": {},
+  "family16": {}
+}
