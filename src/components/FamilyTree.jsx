@@ -1,16 +1,15 @@
-import PropTypes from "prop-types";
-import { useCallback, useEffect, useMemo } from "react";
-import { data } from "react-router";
+import { useEffect, useMemo } from "react";
 import ReactFlow, {
-  addEdge,
   Background,
   Controls,
-  Handle,
   MiniMap,
+  Position,
   useEdgesState,
   useNodesState,
 } from "reactflow";
 import NodeComponent from "./CustomNode";
+import { findFather } from "./utils/commonFunctions";
+const { Top, Bottom, Left, Right } = Position;
 
 const FamilyTreeNode = ({
   member,
@@ -21,39 +20,81 @@ const FamilyTreeNode = ({
 }) => {
   const initialEdges = member?.flatMap((memb) => {
     const edges = [];
+    let sourceId = memb?.relatedMemberId;
 
-    if (memb?.relation === "Father") {
-      edges?.push({
-        id: `edge-${memb?.id}`,
-        source: memb?.relatedMemberId,
-        target: memb?.id,
-      });
-    } else if (memb?.relation === "Brother") {
-      let id = member.filter((person) => person.id === memb?.relatedMemberId);
-      edges?.push({
-        id: `edge-${memb?.id}`,
-        source: id[0]?.relatedMemberId,
-        target: memb?.id,
-      });
-    } else if (memb?.relation === "Sister") {
-      let id = member.filter((person) => person.id === memb?.relatedMemberId);
-      edges?.push({
-        id: `edge-${memb?.id}`,
-        source: id[0]?.relatedMemberId,
-        target: memb?.id,
-      });
-    } else if (memb?.relation === "Wife") {
-      edges?.push({
-        id: `edge-${memb?.id}`,
-        source: memb?.relatedMemberId,
-        target: memb?.id,
-      });
-    } else if (memb?.relation === "Husband") {
-      edges?.push({
-        id: `edge-${memb?.id}`,
-        source: memb?.relatedMemberId,
-        target: memb?.id,
-      });
+    let father = findFather(
+      member?.find((p) => p.relation === "Mother")?.relatedMemberId
+    );
+    let BroOrSis = findFather(
+      member?.find((p) => p.relation === "Brother" || p.relation === "Sister")
+        ?.relatedMemberId
+    );
+
+    switch (memb?.relation) {
+      case "Wife":
+      case "Husband":
+        edges.push({
+          id: `edge-${memb?.id}`,
+          source: sourceId,
+          target: memb?.id,
+          type: "straight",
+          sourceHandle: "right",
+          targetHandle: "left",
+        });
+        break;
+
+      case "Son":
+      case "Daughter":
+        edges.push({
+          id: `edge-${memb?.id}`,
+          source: sourceId,
+          target: memb?.id,
+          type: "smoothstep",
+          sourceHandle: "bottom",
+          targetHandle: "top",
+        });
+        break;
+
+      case "Brother":
+      case "Sister":
+        if (BroOrSis) {
+          edges.push({
+            id: `edge-${memb?.id}`,
+            source: BroOrSis,
+            target: memb?.id,
+            type: "smoothstep",
+            sourceHandle: "bottom",
+            targetHandle: "top",
+          });
+        }
+        break;
+
+      case "Father":
+        edges.push({
+          id: `edge-${memb?.id}`,
+          source: memb?.id,
+          target: memb?.relatedMemberId,
+          type: "smoothstep",
+          sourceHandle: "bottom",
+          targetHandle: "top",
+        });
+        break;
+
+      case "Mother":
+        if (father) {
+          edges.push({
+            id: `edge-${memb?.id}`,
+            source: father,
+            target: memb?.id,
+            type: "straight",
+            sourceHandle: "right",
+            targetHandle: "left",
+          });
+        }
+        break;
+
+      default:
+        break;
     }
 
     return edges;
@@ -70,39 +111,26 @@ const FamilyTreeNode = ({
 
     member?.forEach((memb) => {
       if (!memb?.relatedMemberId) {
-        positions[memb?.id] = { x: 0, y: 0 };
+        positions[memb?.id] = { x: 300, y: 50 };
       } else if (
         memb?.relation === "Father" &&
         positions[memb?.relatedMemberId]
       ) {
-        let siblings = member?.filter(
-          (m) => m?.relatedMemberId === memb?.relatedMemberId
-        );
-        let siblingIndex = siblings?.findIndex((s) => s?.id === memb?.id);
         positions[memb?.id] = {
-          x: siblingIndex * siblingSpacing,
-          y: positions[memb?.relatedMemberId]?.y + 300,
+          x: positions[memb?.relatedMemberId]?.x,
+          y: positions[memb?.relatedMemberId]?.y - 300,
         };
       } else if (
-        memb?.relation === "Brother" &&
-        positions[memb?.relatedMemberId]
+        memb?.relation === "Brother" ||
+        (memb.relation === "Sister" && positions[memb?.relatedMemberId])
       ) {
         positions[memb?.id] = {
           x: positions[memb?.relatedMemberId]?.x - count * 2,
           y: positions[memb?.relatedMemberId]?.y,
         };
-        count += 100;
+        count += 200;
       } else if (
-        memb?.relation === "Sister" &&
-        positions[memb?.relatedMemberId]
-      ) {
-        positions[memb?.id] = {
-          x: positions[memb?.relatedMemberId]?.x - count * 2,
-          y: positions[memb?.relatedMemberId]?.y,
-        };
-        count += 100;
-      } else if (
-        memb?.relation === "Wife" &&
+        (memb?.relation === "Wife" || memb?.relation === "Husband") &&
         positions[memb?.relatedMemberId]
       ) {
         positions[memb?.relatedMemberId] = {
@@ -115,6 +143,28 @@ const FamilyTreeNode = ({
         };
 
         count += 200;
+      } else if (
+        (memb?.relation === "Son" || memb?.relation === "Daughter") &&
+        positions[memb?.relatedMemberId]
+      ) {
+        let siblings = member?.filter(
+          (m) => m?.relatedMemberId === memb?.relatedMemberId
+        );
+        let siblingIndex = siblings?.findIndex((s) => s?.id === memb?.id);
+        positions[memb?.id] = {
+          x: siblingIndex * siblingSpacing,
+          y: positions[memb?.relatedMemberId]?.y + 300,
+        };
+      } else if (memb.relation === "Mother") {
+        positions[memb?.id] = {
+          x:
+            positions[
+              findFather(
+                member?.find((p) => p.relation === "Mother")?.relatedMemberId
+              )
+            ]?.x + 250,
+          y: positions[memb?.relatedMemberId]?.y,
+        };
       }
     });
 
@@ -138,6 +188,18 @@ const FamilyTreeNode = ({
       setIsAddMemberVisible: setIsAddMemberVisible,
     },
     position: nodePositions[member?.id] || { x: 0, y: 0 },
+    sourcePosition:
+      member?.relation === "Wife" ||
+      member?.relation === "Husband" ||
+      member?.relation === "Mother"
+        ? Left
+        : Bottom,
+    targetPosition:
+      member?.relation === "Wife" ||
+      member?.relation === "Husband" ||
+      member?.relation === "Mother"
+        ? Right
+        : Top,
   }));
 
   useEffect(() => {
@@ -151,72 +213,21 @@ const FamilyTreeNode = ({
   const nodeTypes = useMemo(() => ({ custom: NodeComponent }), []);
 
   return (
-    <div className=" w-full h-full">
+    <div className=" w-full h-full overflow-hidden">
       <ReactFlow
         nodes={nodes}
         edges={edges}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         nodeTypes={nodeTypes}
+        fitView
       >
         <Background />
         <Controls />
         <MiniMap />
       </ReactFlow>
     </div>
-
-    // <div className="flex flex-col items-center relative pt-4">
-    //   <div className="flex flex-col items-center">
-    // <div className="w-16 h-16 bg-white border-2 border-gray-500 rounded-full flex items-center justify-center shadow-md">
-    //   👤
-    // </div>
-    //     {member?.partner ? (
-    //       <p className="mt-2 text-sm font-semibold">{`${member?.name} & ${member?.partner}`}</p>
-    //     ) : (
-    //       <p className="mt-2 text-sm font-semibold">{member?.name}</p>
-    //     )}
-    //   </div>
-
-    //   {member?.children && member?.children?.length > 0 && (
-    //     <>
-    //       <div className="w-0.5 h-6 bg-gray-500 mt-2"></div>
-    //       {member?.children && member?.children?.length > 1 && (
-    //         <div className="w-28 h-0.5 bg-gray-500 mt-2"></div>
-    //       )}
-    //     </>
-    //   )}
-    //   {member?.children && (
-    //     <div className="flex mt-4 space-x-4">
-    //       {member?.children?.map((child, index) => (
-    //         <div key={index} className="flex flex-col items-center">
-    //           <FamilyTreeNode member={child} />
-    //         </div>
-    //       ))}
-    //     </div>
-    //   )}
-    // </div>
   );
-};
-
-/* ✅ PropTypes Validation */
-FamilyTreeNode.propTypes = {
-  member: PropTypes.shape([
-    {
-      id: PropTypes.number,
-      name: PropTypes.string,
-      gender: PropTypes.string,
-      children: PropTypes.arrayOf(
-        PropTypes.shape({
-          id: PropTypes.number,
-          name: PropTypes.string,
-          children: PropTypes.array, // Children can be undefined
-        })
-      ),
-    },
-  ]),
-  data: PropTypes.shape({
-    label: PropTypes.string,
-  }),
 };
 
 export default FamilyTreeNode;

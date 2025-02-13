@@ -1,94 +1,162 @@
 import PropTypes from "prop-types";
 import { v4 as uuidv4 } from "uuid";
+import { useFormik } from "formik";
+import * as Yup from "yup";
 
 const AddMember = ({
-  formData,
-  setFormData,
   selectedMember,
-  setSelectedMember,
   member,
   setMember,
   setIsAddMemberVisible,
+  setSelectedMember,
 }) => {
   const relationOptions = [
+    "Self",
     "Father",
     "Mother",
     "Husband",
     "Wife",
     "Brother",
     "Sister",
+    "Son",
+    "Daughter",
   ];
 
-  const addMember = () => {
-    const newMember = { id: uuidv4(), ...formData };
+  const validationSchema = Yup.object({
+    name: Yup.string().required("Name is required"),
+    dob: Yup.string().required("Date of Birth is required"),
+    gender: Yup.string().required("Gender is required"),
+  });
 
-    setMember([...member, newMember]);
-    setFormData({
-      name: "",
-      dob: "",
-      gender: "",
-      relation: "",
-      relatedMemberId: "",
-    });
-    setIsAddMemberVisible(false);
-  };
+  const formik = useFormik({
+    initialValues: {
+      name: selectedMember?.name || "",
+      dob: selectedMember?.dob || "",
+      gender: selectedMember?.gender || "",
+      relation: selectedMember?.relation || "",
+      relatedMemberId: selectedMember?.relatedMemberId || "",
+    },
+    validationSchema,
+    enableReinitialize: true,
 
-  const editMember = (id) => {
-    const updatedMembers = member.map((member) =>
-      member.id === id ? { ...member, ...formData } : member
-    );
-    setMember(updatedMembers);
-    setSelectedMember(null);
-    setFormData({
-      name: "",
-      dob: "",
-      gender: "",
-      relation: "",
-      relatedMemberId: "",
-    });
-    setIsAddMemberVisible(false);
-  };
+    onSubmit: (values) => {
+      let updatedMembers = [...member];
+      const newMemberId = selectedMember ? selectedMember.id : uuidv4();
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    selectedMember ? editMember(selectedMember.id) : addMember();
-    setIsAddMemberVisible(false);
-  };
+      const newMember = {
+        id: newMemberId,
+        ...values,
+        children: [],
+        spouse: [],
+      };
+
+      if (selectedMember) {
+        updatedMembers = updatedMembers.map((m) =>
+          m.id === selectedMember.id ? { ...m, ...values } : m
+        );
+        setSelectedMember(null);
+        formik.resetForm();
+      } else {
+        updatedMembers.push(newMember);
+        formik.resetForm();
+      }
+      if (values.relatedMemberId) {
+        updatedMembers = updatedMembers.map((m) => {
+          if (m.id === values.relatedMemberId) {
+            if (values.relation === "Son" || values.relation === "Daughter") {
+              return { ...m, children: [...(m.children || []), newMemberId] };
+            }
+            if (values.relation === "Husband" || values.relation === "Wife") {
+              return { ...m, spouse: [newMemberId] };
+            }
+            if (values.relation === "Mother") {
+              return {
+                ...m,
+                spouse: [...(m.relatedMemberId || []), newMemberId],
+              };
+            }
+          }
+          return m;
+        });
+
+        if (
+          values.relation === "Husband" ||
+          values.relation === "Wife" ||
+          values.relation === "Mother"
+        ) {
+          updatedMembers = updatedMembers.map((m) => {
+            if (m.id === newMemberId) {
+              return { ...m, spouse: [values.relatedMemberId] }; // Set spouse ID only if it's a marital relation
+            }
+            return m;
+          });
+        }
+        if (
+          values.relation === "Son" ||
+          values.relation === "Daughter" ||
+          values.relation === "Brother" ||
+          values.relation === "Sister" ||
+          values.relation === "Father" ||
+          values.relation === "Mother"
+        ) {
+          updatedMembers = updatedMembers.map((m) => {
+            if (m.id === newMemberId) {
+              return { ...m, children: [values.relatedMemberId] }; // Set spouse ID only if it's a marital relation
+            }
+            return m;
+          });
+        }
+      }
+      setMember(updatedMembers);
+      setIsAddMemberVisible(false);
+      formik.resetForm();
+    },
+  });
 
   return (
     <div className="bg-purple-300 rounded-lg">
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4 p-5 ">
+      <form onSubmit={formik.handleSubmit} className="flex flex-col gap-4 p-5">
         <input
           type="text"
           placeholder="Name"
-          value={formData.name}
-          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+          name="name"
+          value={formik.values.name}
+          onChange={formik.handleChange}
           className="outline rounded-lg p-2"
-          required
         />
+        {formik.touched.name && formik.errors.name && (
+          <p className="text-red-500">{formik.errors.name}</p>
+        )}
+
         <input
           type="date"
-          value={formData.dob}
-          onChange={(e) => setFormData({ ...formData, dob: e.target.value })}
+          name="dob"
+          value={formik.values.dob}
+          onChange={formik.handleChange}
           className="outline rounded-lg p-2"
-          required
         />
+        {formik.touched.dob && formik.errors.dob && (
+          <p className="text-red-500">{formik.errors.dob}</p>
+        )}
+
         <select
-          value={formData.gender}
-          onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
+          name="gender"
+          value={formik.values.gender}
+          onChange={formik.handleChange}
           className="outline p-2 rounded-lg"
-          required
         >
           <option value="">Select Gender</option>
           <option value="Male">Male</option>
           <option value="Female">Female</option>
         </select>
+        {formik.touched.gender && formik.errors.gender && (
+          <p className="text-red-500">{formik.errors.gender}</p>
+        )}
 
         <select
-          value={formData.relation}
-          onChange={(e) =>
-            setFormData({ ...formData, relation: e.target.value })
-          }
+          name="relation"
+          value={formik.values.relation}
+          onChange={formik.handleChange}
           className="border p-2"
         >
           <option value="">Select Relation</option>
@@ -98,48 +166,28 @@ const AddMember = ({
             </option>
           ))}
         </select>
-        {formData.relation && (
+        {formik.touched.relation && formik.errors.relation && (
+          <p className="text-red-500">{formik.errors.relation}</p>
+        )}
+
+        {formik.values.relation && (
           <select
-            value={formData.relatedMemberId}
-            onChange={(e) =>
-              setFormData({ ...formData, relatedMemberId: e.target.value })
-            }
+            name="relatedMemberId"
+            value={formik.values.relatedMemberId}
+            onChange={formik.handleChange}
             className="border p-2"
-            required
           >
             <option value="">Select Related Member</option>
-            {member.map((member) => (
-              <option key={member.id} value={member.id}>
-                {member.name}
+            {member.map((m) => (
+              <option key={m.id} value={m.id}>
+                {m.name}
               </option>
             ))}
           </select>
         )}
-
-        {/* <select
-          value={formData.parentId}
-          onChange={(e) =>
-            setFormData({ ...formData, parentId: e.target.value })
-          }
-          className="outline p-2 rounded-lg"
-        >
-          <option value="">Select Parent</option>
-          {member.map((member) => (
-            <option key={member.id} value={member.id}>
-              {member.name}
-            </option>
-          ))}
-        </select>
-        <select
-            value={formData.coupleId}
-            onChange={(e) => setFormData({ ...formData, coupleId: e.target.value })}
-            className="outline p-2 rounded-lg"
-          >
-            <option value="">Select Spouse</option>
-            {member.filter(member => (formData.gender === "Male" ? member.gender === "Female" : member.gender === "Male")).map(member => (
-              <option key={member.id} value={member.id}>{member.name}</option>
-            ))}
-          </select> */}
+        {formik.touched.relatedMemberId && formik.errors.relatedMemberId && (
+          <p className="text-red-500">{formik.errors.relatedMemberId}</p>
+        )}
 
         <button
           type="submit"
@@ -153,29 +201,27 @@ const AddMember = ({
 };
 
 AddMember.propTypes = {
-  formData: PropTypes.shape({
-    name: PropTypes.string,
-    dob: PropTypes.string,
-    gender: PropTypes.string,
-    parentId: PropTypes.string,
-  }),
-  setFormData: PropTypes.func,
   selectedMember: PropTypes.shape({
     id: PropTypes.string,
     name: PropTypes.string,
     dob: PropTypes.string,
     gender: PropTypes.string,
+    relation: PropTypes.string,
+    relatedMemberId: PropTypes.string,
   }),
-  setSelectedMember: PropTypes.func,
+  setSelectedMember: PropTypes.func.isRequired,
   member: PropTypes.arrayOf(
     PropTypes.shape({
       id: PropTypes.string,
       name: PropTypes.string,
       dob: PropTypes.string,
       gender: PropTypes.string,
+      relation: PropTypes.string,
+      relatedMemberId: PropTypes.string,
     })
-  ),
-  setMember: PropTypes.func,
+  ).isRequired,
+  setMember: PropTypes.func.isRequired,
+  setIsAddMemberVisible: PropTypes.func.isRequired,
 };
 
 export default AddMember;

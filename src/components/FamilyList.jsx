@@ -34,28 +34,8 @@ const FamilyList = () => {
 
   const handleAddMember = () => {
     setIsAddMemberVisible(true);
+    setSelectedMember(null);
   };
-  // const navigate = useNavigate();
-  // const handleDelete = (family) => {
-  //   Swal.fire({
-  //     title: "Are you sure?",
-  //     text: "You want to delete this family?",
-  //     icon: "warning",
-  //     showCancelButton: true,
-  //     confirmButtonColor: "#3085d6",
-  //     cancelButtonColor: "#d33",
-  //     confirmButtonText: "Yes, delete it!",
-  //   }).then((result) => {
-  //     if (result.isConfirmed) {
-  //       Swal.fire({
-  //         title: "Deleted!",
-  //         text: "Your family has been deleted.",
-  //         icon: "success",
-  //       });
-  //       setFamily((prevFamily) => prevFamily.filter((f) => f !== family));
-  //     }
-  //   });
-  // };
 
   return (
     <>
@@ -88,7 +68,13 @@ const FamilyList = () => {
           </div>
         </div>
         <div className="w-full h-screen">
-          <FamilyTreeNode member={member} setMember={setMember} setSelectedMember={setSelectedMember} setFormData={setFormData} setIsAddMemberVisible={setIsAddMemberVisible}/>
+          <FamilyTreeNode
+            member={member}
+            setMember={setMember}
+            setSelectedMember={setSelectedMember}
+            setFormData={setFormData}
+            setIsAddMemberVisible={setIsAddMemberVisible}
+          />
         </div>
         <div
           className={`flex flex-col items-start justify-start p-4 w-1/4  bg-purple-500 ${
@@ -108,12 +94,6 @@ const FamilyList = () => {
       </div>
     </>
   );
-};
-
-FamilyList.propTypes = {
-  setSelectedFamily: PropTypes.shape({
-    type: PropTypes.object,
-  }),
 };
 
 export default FamilyList;
