@@ -1,10 +1,13 @@
 import { IoMdAdd } from "react-icons/io";
 import { useEffect, useState } from "react";
 import FamilyTreeNode from "./FamilyTree";
-import AddMember from "./AddMember";
 import { GrClear } from "react-icons/gr";
+import AddMember from "./Modals/AddMember";
 
 const FamilyList = () => {
+
+
+
   const [member, setMember] = useState(
     JSON.parse(localStorage.getItem("familyMembers")) || []
   );
@@ -62,7 +65,7 @@ const FamilyList = () => {
               onClick={handleAddMember}
               title="add member"
             >
-              <IoMdAdd className="h-5 w-5" />
+              <IoMdAdd className="h-5 w-5 text-white" />
             </button>
             <button
               className="p-4 shadow-lg bg-purple-500 hover:bg-purple-700 text-white rounded-lg cursor-pointer flex items-center justify-center gap-2"
@@ -72,11 +75,11 @@ const FamilyList = () => {
               <GrClear className="h-5 w-5" />
             </button>
           </div>
-          <div className="flex flex-wrap gap-4 cursor-pointer items-start justify-start mt-4 p-4 w-[220px]">
+          <div className="flex flex-wrap gap-4 cursor-pointer items-start justify-start mt-4 p-2 w-[220px]">
             {member?.map((key, index) => (
               <div
                 key={key.id}
-                className="w-full p-4 rounded-lg shadow-lg text-white bg-purple-500 hover:bg-purple-700 flex justify-between items-center"
+                className="w-full p-3 rounded-lg shadow-lg text-white bg-purple-500 hover:bg-purple-700 flex justify-between items-center"
               >
                 <div className="flex justify-between items-center gap-5">
                   <h2 className="mx-2 text-lg capitalize font-semibold">
@@ -100,21 +103,16 @@ const FamilyList = () => {
             setIsAddMemberVisible={setIsAddMemberVisible}
           />
         </div>
-        <div
-          className={`flex flex-col items-start justify-start p-2 w-1/4  bg-purple-100 ${
-            isAddMemberVisible ? "block" : "hidden"
-          }`}
-        >
-          <AddMember
-            formData={formData}
-            setFormData={setFormData}
-            selectedMember={selectedMember}
-            setSelectedMember={setSelectedMember}
-            member={member}
-            setMember={setMember}
-            setIsAddMemberVisible={setIsAddMemberVisible}
-          />
-        </div>
+        <AddMember
+          formData={formData}
+          setFormData={setFormData}
+          selectedMember={selectedMember}
+          setSelectedMember={setSelectedMember}
+          member={member}
+          setMember={setMember}
+          setIsAddMemberVisible={setIsAddMemberVisible}
+          isAddMemberVisible={isAddMemberVisible}
+        />
       </div>
     </>
   );

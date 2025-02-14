@@ -82,17 +82,90 @@ const NodeComponent = ({ data }) => {
         />
       </div>
 
-      {marriedMembers.includes(data.member.id) && (
+      {marriedMembers.includes(data?.member?.id) && (
         <>
           <Handle type="source" position={Right} id="right" />
           <Handle type="target" position={Left} id="left" />
         </>
       )}
-      {parents.includes(data.member.id) && (
+      {parents.includes(data?.member?.id) && (
         <>
           <Handle type="source" position={Bottom} id="bottom" />
           <Handle type="target" position={Top} id="top" />
         </>
+      )}
+      {data.id === "Haribhai" && (
+        <>
+          <Handle
+            type="source"
+            position="right"
+            id="right"
+            className="!w-2 !h-2 !bg-gray-500"
+          />
+          <Handle
+            type="source"
+            position="bottom"
+            id="bottom"
+            className="!w-2 !h-2 !bg-gray-500"
+          />
+        </>
+      )}
+
+      {data.id === "Jamnaben" && (
+        <Handle
+          type="target"
+          position="left"
+          id="left"
+          className="!w-2 !h-2 !bg-gray-500"
+        />
+      )}
+
+      {data.id === "Manubhai" && (
+        <>
+          <Handle
+            type="source"
+            position="right"
+            id="right"
+            className="!w-2 !h-2 !bg-gray-500"
+          />
+          <Handle
+            type="source"
+            position="bottom"
+            id="bottom"
+            className="!w-2 !h-2 !bg-gray-500"
+          />
+          <Handle
+            type="target"
+            position="top"
+            id="top"
+            className="!w-2 !h-2 !bg-gray-500"
+          />
+        </>
+      )}
+
+      {data.id === "Chetanaben" && (
+        <Handle
+          type="target"
+          position="left"
+          id="left"
+          className="!w-2 !h-2 !bg-gray-500"
+        />
+      )}
+      {data.id === "Dip" && (
+        <Handle
+          type="target"
+          position="top"
+          id="top"
+          className="!w-2 !h-2 !bg-gray-500"
+        />
+      )}
+      {data.id === "Khushi" && (
+        <Handle
+          type="target"
+          position="top"
+          id="top"
+          className="!w-2 !h-2 !bg-gray-500"
+        />
       )}
     </div>
   );

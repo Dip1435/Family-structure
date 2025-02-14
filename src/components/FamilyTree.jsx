@@ -2,7 +2,6 @@ import { useEffect, useMemo } from "react";
 import ReactFlow, {
   Background,
   Controls,
-  MiniMap,
   Position,
   useEdgesState,
   useNodesState,
@@ -14,6 +13,7 @@ import {
   isFather,
   isWife,
 } from "./utils/commonFunctions";
+import { familyEdges, familyNodes } from "./Data/dummyData";
 const { Top, Bottom, Left, Right } = Position;
 
 const FamilyTreeNode = ({
@@ -100,7 +100,7 @@ const FamilyTreeNode = ({
         break;
 
       case "Father":
-        edges.push({
+        edges?.push({
           id: `edge-${memb?.id}`,
           source: memb?.id,
           target: memb?.relatedMemberId,
@@ -126,7 +126,6 @@ const FamilyTreeNode = ({
       default:
         break;
     }
-
     return edges;
   });
 
@@ -198,7 +197,6 @@ const FamilyTreeNode = ({
 
     return positions;
   };
-
   const nodePositions = positionNodes();
 
   const initialNodes = member?.map((member) => ({
@@ -231,12 +229,96 @@ const FamilyTreeNode = ({
   }));
 
   useEffect(() => {
-    setNodes(initialNodes);
-    setEdges(initialEdges);
+    if (member?.length > 0) {
+      setNodes(initialNodes);
+      setEdges(initialEdges);
+    } else {
+      setNodes(familyNodes);
+      setEdges(familyEdges);
+    }
   }, [member]);
+  // const FamilyNode = ({ data }) => {
+  //   return (
+  //     <div className="relative flex items-center justify-center px-6 py-3 bg-white border border-gray-400 rounded-lg shadow-md">
+  //       {data.id === "Haribhai" && (
+  //         <>
+  //           <Handle
+  //             type="source"
+  //             position="right"
+  //             id="right"
+  //             className="!w-2 !h-2 !bg-gray-500"
+  //           />
+  //           <Handle
+  //             type="source"
+  //             position="bottom"
+  //             id="bottom"
+  //             className="!w-2 !h-2 !bg-gray-500"
+  //           />
+  //         </>
+  //       )}
+  //       {data.id === "Jamnaben" && (
+  //         <Handle
+  //           type="target"
+  //           position="left"
+  //           id="left"
+  //           className="!w-2 !h-2 !bg-gray-500"
+  //         />
+  //       )}
+  //       {data.id === "Manubhai" && (
+  //         <>
 
-  const [nodes, setNodes, onNodesChange] = useNodesState();
-  const [edges, setEdges, onEdgesChange] = useEdgesState();
+  //           <Handle
+  //             type="source"
+  //             position="right"
+  //             id="right"
+  //             className="!w-2 !h-2 !bg-gray-500"
+  //           />
+  //           <Handle
+  //             type="source"
+  //             position="bottom"
+  //             id="bottom"
+  //             className="!w-2 !h-2 !bg-gray-500"
+  //           />
+  //           <Handle
+  //             type="target"
+  //             position="top"
+  //             id="top"
+  //             className="!w-2 !h-2 !bg-gray-500"
+  //           />
+  //         </>
+  //       )}
+  //       {data.id === "Chetanaben" && (
+  //         <Handle
+  //           type="target"
+  //           position="left"
+  //           id="left"
+  //           className="!w-2 !h-2 !bg-gray-500"
+  //         />
+  //       )}
+  //       {data.id === "Dip" && (
+  //         <Handle
+  //           type="target"
+  //           position="top"
+  //           id="top"
+  //           className="!w-2 !h-2 !bg-gray-500"
+  //         />
+  //       )}
+  //       {data.id === "Khushi" && (
+  //         <Handle
+  //           type="target"
+  //           position="top"
+  //           id="top"
+  //           className="!w-2 !h-2 !bg-gray-500"
+  //         />
+  //       )}
+
+  //       <span className="text-sm text-gray-800">{data.label}</span>
+  //     </div>
+  //   );
+  // };
+
+  const [nodes, setNodes, onNodesChange] = useNodesState(familyNodes);
+  const [edges, setEdges, onEdgesChange] = useEdgesState(familyEdges);
 
   const nodeTypes = useMemo(() => ({ custom: NodeComponent }), []);
 
