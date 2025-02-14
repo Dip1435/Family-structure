@@ -8,7 +8,12 @@ import ReactFlow, {
   useNodesState,
 } from "reactflow";
 import NodeComponent from "./CustomNode";
-import { findFather } from "./utils/commonFunctions";
+import {
+  findFather,
+  findWife,
+  isFather,
+  isWife,
+} from "./utils/commonFunctions";
 const { Top, Bottom, Left, Right } = Position;
 
 const FamilyTreeNode = ({
@@ -23,13 +28,26 @@ const FamilyTreeNode = ({
     let sourceId = memb?.relatedMemberId;
 
     let father = findFather(
-      member?.find((p) => p.relation === "Mother")?.relatedMemberId
+      member?.find((p) => p.relation === "Mother")?.relatedMemberId,
+      member
     );
     let BroOrSis = findFather(
       member?.find((p) => p.relation === "Brother" || p.relation === "Sister")
-        ?.relatedMemberId
+        ?.relatedMemberId,
+      member
     );
-
+    const Mother = findFather(
+      member?.find((p) => p.relation === "Son" || p.relation === "Daughter")
+        ?.relatedMemberId,
+      member
+    );
+    const isMom = (id) => {
+      return member.find((p) => p.id === id).relation === "Wife";
+    };
+    const findMom = (id) => {
+      return member.find((p) => p.id === id && p.relation === "Wife")
+        .relatedMemberId;
+    };
     switch (memb?.relation) {
       case "Wife":
       case "Husband":
@@ -47,7 +65,14 @@ const FamilyTreeNode = ({
       case "Daughter":
         edges.push({
           id: `edge-${memb?.id}`,
-          source: sourceId,
+          source:
+            isFather(memb?.relatedMemberId, member) &&
+            !isWife(memb?.relatedMemberId, member)
+              ? sourceId
+              : isFather(memb?.relatedMemberId, member) &&
+                isWife(memb?.relatedMemberId, member)
+              ? findWife(memb?.relatedMemberId, member)
+              : Mother,
           target: memb?.id,
           type: "smoothstep",
           sourceHandle: "bottom",
@@ -60,7 +85,12 @@ const FamilyTreeNode = ({
         if (BroOrSis) {
           edges.push({
             id: `edge-${memb?.id}`,
-            source: BroOrSis,
+            source: isMom(BroOrSis)
+              ? findMom(BroOrSis)
+              : isFather(BroOrSis)
+              ? BroOrSis
+              : Mother,
+
             target: memb?.id,
             type: "smoothstep",
             sourceHandle: "bottom",
@@ -102,10 +132,7 @@ const FamilyTreeNode = ({
 
   const positionNodes = () => {
     let positions = {};
-    let level = 0;
     let siblingSpacing = 200;
-    let parentY = -150;
-    let siblingY = 150;
     let spouseSpacing = 100;
     let count = 100;
 
@@ -147,12 +174,12 @@ const FamilyTreeNode = ({
         (memb?.relation === "Son" || memb?.relation === "Daughter") &&
         positions[memb?.relatedMemberId]
       ) {
-        let siblings = member?.filter(
-          (m) => m?.relatedMemberId === memb?.relatedMemberId
-        );
-        let siblingIndex = siblings?.findIndex((s) => s?.id === memb?.id);
+        // let siblings = member?.filter(
+        //   (m) => m?.relatedMemberId === memb?.relatedMemberId
+        // );
+        // let siblingIndex = siblings?.findIndex((s) => s?.id === memb?.id);
         positions[memb?.id] = {
-          x: siblingIndex * siblingSpacing,
+          x: positions[memb?.relatedMemberId]?.x + siblingSpacing * 2,
           y: positions[memb?.relatedMemberId]?.y + 300,
         };
       } else if (memb.relation === "Mother") {
@@ -160,7 +187,8 @@ const FamilyTreeNode = ({
           x:
             positions[
               findFather(
-                member?.find((p) => p.relation === "Mother")?.relatedMemberId
+                member?.find((p) => p.relation === "Mother")?.relatedMemberId,
+                member
               )
             ]?.x + 250,
           y: positions[memb?.relatedMemberId]?.y,
@@ -224,7 +252,6 @@ const FamilyTreeNode = ({
       >
         <Background />
         <Controls />
-        <MiniMap />
       </ReactFlow>
     </div>
   );

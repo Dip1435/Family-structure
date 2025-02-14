@@ -2,6 +2,7 @@ import PropTypes from "prop-types";
 import { v4 as uuidv4 } from "uuid";
 import { useFormik } from "formik";
 import * as Yup from "yup";
+import { toast } from "react-toastify";
 
 const AddMember = ({
   selectedMember,
@@ -28,6 +29,28 @@ const AddMember = ({
     gender: Yup.string().required("Gender is required"),
   });
 
+  const isRelationAllowed = (relatedId, relation) => {
+    const relatedMember = member.find((m) => m.id === relatedId);
+    if (!relatedMember) return true;
+
+    if (relation === "Husband" || relation === "Wife") {
+      return !relatedMember.spouse?.length; // Check if they already have a spouse
+    }
+    if (relation === "Father") {
+      return !relatedMember.parents?.some((pId) => {
+        const parent = member.find((m) => m.id === pId);
+        return parent?.gender === "Male";
+      });
+    }
+    if (relation === "Mother") {
+      return !relatedMember.parents?.some((pId) => {
+        const parent = member.find((m) => m.id === pId);
+        return parent?.gender === "Female";
+      });
+    }
+    return true;
+  };
+
   const formik = useFormik({
     initialValues: {
       name: selectedMember?.name || "",
@@ -40,6 +63,30 @@ const AddMember = ({
     enableReinitialize: true,
 
     onSubmit: (values) => {
+      if (
+        !isRelationAllowed(values.relatedMemberId, values.relation) &&
+        !selectedMember
+      ) {
+        toast.error(`The selected person already has a ${values.relation}.`);
+        return;
+      } else if (
+        values.relation === "Brother" ||
+        values.relation === "Sister"
+      ) {
+        let id = values.relatedMemberId;
+        let relatedMember = member.find((m) => m.id === id);
+        if (
+          relatedMember.relation === "Father" ||
+          relatedMember.relation === "Self" ||
+          relatedMember.relation === "Mother" ||
+          relatedMember.relation === "Husband" ||
+          relatedMember.relation === "Wife"
+        ) {
+          toast.error(`Cant add relation `);
+          return;
+        }
+      }
+
       let updatedMembers = [...member];
       const newMemberId = selectedMember ? selectedMember.id : uuidv4();
 
@@ -114,7 +161,7 @@ const AddMember = ({
   });
 
   return (
-    <div className="bg-purple-300 rounded-lg">
+    <div className="bg-purple-500 rounded-lg">
       <form onSubmit={formik.handleSubmit} className="flex flex-col gap-4 p-5">
         <input
           type="text"
@@ -157,7 +204,7 @@ const AddMember = ({
           name="relation"
           value={formik.values.relation}
           onChange={formik.handleChange}
-          className="border p-2"
+          className="border p-2 rounded-lg"
         >
           <option value="">Select Relation</option>
           {relationOptions.map((relation) => (
@@ -175,7 +222,7 @@ const AddMember = ({
             name="relatedMemberId"
             value={formik.values.relatedMemberId}
             onChange={formik.handleChange}
-            className="border p-2"
+            className="border p-2 rounded-lg"
           >
             <option value="">Select Related Member</option>
             {member.map((m) => (
@@ -188,13 +235,24 @@ const AddMember = ({
         {formik.touched.relatedMemberId && formik.errors.relatedMemberId && (
           <p className="text-red-500">{formik.errors.relatedMemberId}</p>
         )}
-
-        <button
-          type="submit"
-          className="bg-green-500 text-black px-4 py-2 rounded-lg"
-        >
-          {selectedMember ? "Update" : "Add"}
-        </button>
+        <div className="flex justify-start items-center gap-4">
+          <button
+            type="submit"
+            className="bg-green-600 text-white px-4 py-2 rounded-lg"
+          >
+            {selectedMember ? "Update" : "Add"}
+          </button>
+          <button
+            className={`bg-red-600 ${
+              selectedMember ? "hidden" : "block"
+            } text-white px-4 py-2 rounded-lg`}
+            onClick={() => {
+              formik.resetForm();
+            }}
+          >
+            Reset
+          </button>
+        </div>
       </form>
     </div>
   );

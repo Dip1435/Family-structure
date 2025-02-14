@@ -1,11 +1,8 @@
-import PropTypes from "prop-types";
-
 import { IoMdAdd } from "react-icons/io";
-import Swal from "sweetalert2";
 import { useEffect, useState } from "react";
-import Header from "./Header";
 import FamilyTreeNode from "./FamilyTree";
 import AddMember from "./AddMember";
+import { GrClear } from "react-icons/gr";
 
 const FamilyList = () => {
   const [member, setMember] = useState(
@@ -37,22 +34,49 @@ const FamilyList = () => {
     setSelectedMember(null);
   };
 
+  const handleClearAll = () => {
+    localStorage.clear("familyMembers");
+    setMember([]);
+  };
+
   return (
     <>
       {/* <Header /> */}
       <div className="flex">
-        <div className="flex flex-col items-center justify-start w-1/4 bg-purple-500">
-          <button
+        <div className="flex flex-col items-center justify-start w-1/4 bg-purple-100">
+          {/* <button
             className="py-4 shadow-lg bg-purple-300 text-lg capitalize font-semibold  w-[220px] rounded-lg cursor-pointer mt-2 flex items-center justify-center gap-2"
             onClick={handleAddMember}
           >
             <IoMdAdd className="h-5 w-5" /> Add Family
           </button>
-          <div className="flex flex-wrap gap-4   cursor-pointer items-start justify-start mt-4 p-4 w-[250px]">
+          <button
+            className="py-4 shadow-lg bg-purple-300 text-lg capitalize font-semibold  w-[220px] rounded-lg cursor-pointer mt-2 flex items-center justify-center gap-2"
+            onClick={() => handleClearAll()}
+          >
+            Clear All
+          </button> */}
+          <div className="flex justify-center items-center gap-14 mt-4">
+            <button
+              className="p-4 shadow-lg bg-purple-500 hover:bg-purple-700 text-white rounded-lg cursor-pointer flex items-center justify-center gap-2"
+              onClick={handleAddMember}
+              title="add member"
+            >
+              <IoMdAdd className="h-5 w-5" />
+            </button>
+            <button
+              className="p-4 shadow-lg bg-purple-500 hover:bg-purple-700 text-white rounded-lg cursor-pointer flex items-center justify-center gap-2"
+              onClick={() => handleClearAll()}
+              title="clear all"
+            >
+              <GrClear className="h-5 w-5" />
+            </button>
+          </div>
+          <div className="flex flex-wrap gap-4 cursor-pointer items-start justify-start mt-4 p-4 w-[220px]">
             {member?.map((key, index) => (
               <div
                 key={key.id}
-                className="w-full p-4 rounded-lg shadow-lg bg-purple-300 hover:bg-purple-200 flex justify-between items-center"
+                className="w-full p-4 rounded-lg shadow-lg text-white bg-purple-500 hover:bg-purple-700 flex justify-between items-center"
               >
                 <div className="flex justify-between items-center gap-5">
                   <h2 className="mx-2 text-lg capitalize font-semibold">
@@ -77,7 +101,7 @@ const FamilyList = () => {
           />
         </div>
         <div
-          className={`flex flex-col items-start justify-start p-4 w-1/4  bg-purple-500 ${
+          className={`flex flex-col items-start justify-start p-2 w-1/4  bg-purple-100 ${
             isAddMemberVisible ? "block" : "hidden"
           }`}
         >
