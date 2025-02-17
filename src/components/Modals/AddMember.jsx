@@ -12,19 +12,8 @@ const AddMember = ({
   setIsAddMemberVisible,
   setSelectedMember,
 }) => {
-  const relationOptions = [
-    "Self",
-    "Father",
-    "Mother",
-    "Husband",
-    "Wife",
-    "Brother",
-    "Sister",
-    "Son",
-    "Daughter",
-  ];
-  const maleRelations = ["Mother", "Wife", "Daughter", "Sister"];
-  const femaleRelations = ["Father", "Husband", "Son", "Brother"];
+  const maleRelations = ["Self", "Mother", "Wife", "Daughter", "Sister"];
+  const femaleRelations = ["Self", "Father", "Husband", "Son", "Brother"];
 
   const validationSchema = Yup.object({
     name: Yup.string().required("Name is required"),
@@ -38,27 +27,27 @@ const AddMember = ({
     // }),
   });
 
-  const isRelationAllowed = (relatedId, relation) => {
-    const relatedMember = member.find((m) => m.id === relatedId);
-    if (!relatedMember) return true;
+  // const isRelationAllowed = (relatedId, relation) => {
+  //   const relatedMember = member.find((m) => m.id === relatedId);
+  //   if (!relatedMember) return true;
 
-    if (relation === "Husband" || relation === "Wife") {
-      return !relatedMember.spouse?.length; // Check if they already have a spouse
-    }
-    if (relation === "Father") {
-      return !relatedMember.parents?.some((pId) => {
-        const parent = member.find((m) => m.id === pId);
-        return parent?.gender === "Male";
-      });
-    }
-    if (relation === "Mother") {
-      return !relatedMember.parents?.some((pId) => {
-        const parent = member.find((m) => m.id === pId);
-        return parent?.gender === "Female";
-      });
-    }
-    return true;
-  };
+  //   if (relation === "Husband" || relation === "Wife") {
+  //     return !relatedMember.spouse?.length; // Check if they already have a spouse
+  //   }
+  //   if (relation === "Father") {
+  //     return !relatedMember.parents?.some((pId) => {
+  //       const parent = member.find((m) => m.id === pId);
+  //       return parent?.gender === "Male";
+  //     });
+  //   }
+  //   if (relation === "Mother") {
+  //     return !relatedMember.parents?.some((pId) => {
+  //       const parent = member.find((m) => m.id === pId);
+  //       return parent?.gender === "Female";
+  //     });
+  //   }
+  //   return true;
+  // };
 
   const formik = useFormik({
     initialValues: {
@@ -72,41 +61,45 @@ const AddMember = ({
     enableReinitialize: true,
 
     onSubmit: (values) => {
-      if (
-        !isRelationAllowed(values.relatedMemberId, values.relation) &&
-        !selectedMember
-      ) {
-        toast.error(`The selected person already has a ${values.relation}.`);
-        return;
-      } else if (
-        values.relation === "Brother" ||
-        values.relation === "Sister"
-      ) {
-        let id = values.relatedMemberId;
-        let relatedMember = member.find((m) => m.id === id);
-        if (
-          relatedMember.relation === "Father" ||
-          relatedMember.relation === "Self" ||
-          relatedMember.relation === "Mother" ||
-          relatedMember.relation === "Husband" ||
-          relatedMember.relation === "Wife"
-        ) {
-          toast.error(`Cant add relation`);
-          return;
-        }
-      } else if (values.relation === "Self" && values.gender === "Female") {
-        toast.error(`Cant add Female as root member`);
-        return;
-      }
+      // if (
+      //   !isRelationAllowed(values.relatedMemberId, values.relation) &&
+      //   !selectedMember
+      // ) {
+      //   toast.error(`The selected person already has a ${values.relation}.`);
+      //   return;
+      // } else if (
+      //   values.relation === "Brother" ||
+      //   values.relation === "Sister"
+      // ) {
+      //   let id = values.relatedMemberId;
+      //   let relatedMember = member.find((m) => m.id === id);
+      //   if (
+      //     relatedMember.relation === "Father" ||
+      //     relatedMember.relation === "Self" ||
+      //     relatedMember.relation === "Mother" ||
+      //     relatedMember.relation === "Husband" ||
+      //     relatedMember.relation === "Wife"
+      //   ) {
+      //     toast.error(`Cant add relation`);
+      //     return;
+      //   }
+      // } else if (values.relation === "Self" && values.gender === "Female") {
+      //   toast.error(`Cant add Female as root member`);
+      //   return;
+      // }
 
       let updatedMembers = [...member];
       const newMemberId = selectedMember ? selectedMember?.id : uuidv4();
+      const relatedMember = member?.find(
+        (m) => m.id === values.relatedMemberId
+      );
 
       const newMember = {
         id: newMemberId,
         ...values,
         children: [],
         spouse: [],
+        parents: [],
       };
 
       if (selectedMember) {
@@ -119,50 +112,115 @@ const AddMember = ({
         updatedMembers.push(newMember);
         formik.resetForm();
       }
-      if (values.relatedMemberId) {
-        updatedMembers = updatedMembers.map((m) => {
+      // if (values.relatedMemberId) {
+      //   updatedMembers = updatedMembers.map((m) => {
+      //     if (m.id === values.relatedMemberId) {
+      //       if (values.relation === "Son" || values.relation === "Daughter") {
+      //         return { ...m, children: [...(m.children || []), newMemberId] };
+      //       }
+      //       if (values.relation === "Husband" || values.relation === "Wife") {
+      //         return { ...m, spouse: [newMemberId] };
+      //       }
+      //       if (values.relation === "Mother") {
+      //         return {
+      //           ...m,
+      //           spouse: [...(m.relatedMemberId || []), newMemberId],
+      //         };
+      //       }
+      //     }
+      //     return m;
+      //   });
+
+      //   if (
+      //     values.relation === "Husband" ||
+      //     values.relation === "Wife" ||
+      //     values.relation === "Mother"
+      //   ) {
+      //     updatedMembers = updatedMembers.map((m) => {
+      //       if (m.id === newMemberId) {
+      //         return { ...m, spouse: [values.relatedMemberId] }; // Set spouse ID only if it's a marital relation
+      //       }
+      //       return m;
+      //     });
+      //   }
+      //   if (
+      //     values.relation === "Son" ||
+      //     values.relation === "Daughter" ||
+      //     values.relation === "Brother" ||
+      //     values.relation === "Sister" ||
+      //     values.relation === "Father" ||
+      //     values.relation === "Mother"
+      //   ) {
+      //     updatedMembers = updatedMembers.map((m) => {
+      //       if (m.id === newMemberId) {
+      //         return { ...m, children: [values.relatedMemberId] }; // Set spouse ID only if it's a marital relation
+      //       }
+      //       return m;
+      //     });
+      //   }
+      // }
+      if (relatedMember) {
+        updatedMembers = updatedMembers?.map((m) => {
           if (m.id === values.relatedMemberId) {
             if (values.relation === "Son" || values.relation === "Daughter") {
-              return { ...m, children: [...(m.children || []), newMemberId] };
-            }
-            if (values.relation === "Husband" || values.relation === "Wife") {
-              return { ...m, spouse: [newMemberId] };
-            }
-            if (values.relation === "Mother") {
               return {
                 ...m,
-                spouse: [...(m.relatedMemberId || []), newMemberId],
+                children: [...new Set([...(m.children || []), newMemberId])],
+              };
+            }
+            if (values.relation === "Husband" || values.relation === "Wife") {
+              return { ...m, spouse: newMemberId };
+            }
+            if (values.relation === "Mother" || values.relation === "Father") {
+              return {
+                ...m,
+                parents: [...new Set([...(m.parents || []), newMemberId])],
               };
             }
           }
           return m;
         });
-
-        if (
-          values.relation === "Husband" ||
-          values.relation === "Wife" ||
-          values.relation === "Mother"
-        ) {
-          updatedMembers = updatedMembers.map((m) => {
-            if (m.id === newMemberId) {
-              return { ...m, spouse: [values.relatedMemberId] }; // Set spouse ID only if it's a marital relation
+        updatedMembers = updatedMembers.map((m) => {
+          if (m.id === newMemberId) {
+            if (values.relation === "Husband" || values.relation === "Wife") {
+              return { ...m, spouse: values.relatedMemberId };
             }
-            return m;
-          });
-        }
-        if (
-          values.relation === "Son" ||
-          values.relation === "Daughter" ||
-          values.relation === "Brother" ||
-          values.relation === "Sister" ||
-          values.relation === "Father" ||
-          values.relation === "Mother"
-        ) {
-          updatedMembers = updatedMembers.map((m) => {
-            if (m.id === newMemberId) {
-              return { ...m, children: [values.relatedMemberId] }; // Set spouse ID only if it's a marital relation
+            if (values.relation === "Son" || values.relation === "Daughter") {
+              return {
+                ...m,
+                parents: [
+                  ...new Set([...(m.parents || []), values.relatedMemberId]),
+                ],
+              };
             }
-            return m;
+            if (values.relation === "Brother" || values.relation === "Sister") {
+              return { ...m, parents: [...(relatedMember.parents || [])] }; // Inherit parents
+            }
+            if (values.relation === "Father" || values.relation === "Mother") {
+              return {
+                ...m,
+                children: [
+                  ...new Set([...(m.children || []), values.relatedMemberId]),
+                ],
+              };
+            }
+          }
+          return m;
+        });
+        // Add new sibling to parents' children list
+        if (values.relation === "Brother" || values.relation === "Sister") {
+          relatedMember.parents?.forEach((parentId) => {
+            updatedMembers = updatedMembers.map((parent) => {
+              if (parent.id === parentId) {
+                return {
+                  ...parent,
+                  children: [
+                    ...new Set([...(parent.children || []), newMemberId]),
+                  ],
+                };
+              }
+              return parent;
+            });
           });
         }
       }

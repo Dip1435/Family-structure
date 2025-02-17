@@ -2,7 +2,7 @@ export const familyNodes = [
   {
     id: "Haribhai",
     type: "custom",
-    position: { x: 300, y: 300 },
+    position: { x: -150, y: 100 },
     data: {
       label: "Haribhai",
       id: "Haribhai",
@@ -15,7 +15,7 @@ export const familyNodes = [
   {
     id: "Jamnaben",
     type: "custom",
-    position: { x: 550, y: 300 },
+    position: { x: 50, y: 100 },
     data: {
       label: "Jamnaben",
       id: "Jamnaben",
@@ -28,7 +28,7 @@ export const familyNodes = [
   {
     id: "Manubhai",
     type: "custom",
-    position: { x: 300, y: 550 },
+    position: { x: 250, y: 350 },
     data: {
       label: "Manubhai",
       id: "Manubhai",
@@ -39,9 +39,97 @@ export const familyNodes = [
     children: ["Dip", "Khushi"],
   },
   {
+    id: "Kanubhai",
+    type: "custom",
+    position: { x: -200, y: 350 },
+    data: {
+      label: "Kanubhai",
+      id: "Kanubhai",
+      gender: "Male",
+      dob: "1950-01-01",
+    },
+    spouse: ["Keshaben"],
+  },
+  {
+    id: "Keshaben",
+    type: "custom",
+    position: { x: 0, y: 350 },
+    data: {
+      label: "Keshaben",
+      id: "Keshaben",
+      gender: "Female",
+      dob: "1960-01-01",
+    },
+    spouse: ["Kanubhai"],
+    children: ["Jagruti"],
+  },
+  {
+    id: "Gagabhai",
+    type: "custom",
+    position: { x: -650, y: 350 },
+    data: {
+      label: "Gagabhai",
+      id: "Gagabhai",
+      gender: "Male",
+      dob: "1950-01-01",
+    },
+    spouse: ["Krishnaben"],
+    children: ["Jagruti"],
+  },
+  {
+    id: "Krishnaben",
+    type: "custom",
+    position: { x: -450, y: 350 },
+    data: {
+      label: "Krishnaben",
+      id: "Krishnaben",
+      gender: "Female",
+      dob: "1960-01-01",
+    },
+    spouse: ["Gagabhai"],
+    children: ["Jagruti"],
+  },
+  {
+    id: "Jagruti",
+    type: "custom",
+    position: { x: -450, y: 600 },
+    data: {
+      label: "Jagruti",
+      id: "Jagruti",
+      gender: "Female",
+      dob: "1960-01-01",
+    },
+    spouse: ["Mihir"],
+    children: ["Abhyant"],
+  },
+  {
+    id: "Mihir",
+    type: "custom",
+    position: { x: -650, y: 600 },
+    data: {
+      label: "Mihir",
+      id: "Mihir",
+      gender: "Male",
+      dob: "1960-01-01",
+    },
+    spouse: ["Jagruti"],
+    children: ["Abhyant"],
+  },
+  {
+    id: "Abhyant",
+    type: "custom",
+    position: { x: -650, y: 850 },
+    data: {
+      label: "Abhyant",
+      id: "Abhyant",
+      gender: "Male",
+      dob: "1960-01-01",
+    },
+  },
+  {
     id: "Chetanaben",
     type: "custom",
-    position: { x: 550, y: 550 },
+    position: { x: 450, y: 350 },
     data: {
       label: "Chetanaben",
       id: "Chetanaben",
@@ -54,13 +142,13 @@ export const familyNodes = [
   {
     id: "Dip",
     type: "custom",
-    position: { x: 300, y: 800 },
+    position: { x: 250, y: 650 },
     data: { label: "Dip", id: "Dip", gender: "Male", dob: "1980-01-01" },
   },
   {
     id: "Khushi",
     type: "custom",
-    position: { x: 550, y: 800 },
+    position: { x: 500, y: 650 },
     data: {
       label: "Khushi",
       id: "Khushi",
@@ -83,6 +171,55 @@ export const familyEdges = [
     source: "Haribhai",
     sourceHandle: "bottom",
     target: "Manubhai",
+    targetHandle: "top",
+  },
+  {
+    id: "e-Haribhai-Kanubhai",
+    source: "Haribhai",
+    sourceHandle: "bottom",
+    target: "Kanubhai",
+    targetHandle: "top",
+  },
+  {
+    id: "e-Haribhai-Gagabhai",
+    source: "Haribhai",
+    sourceHandle: "bottom",
+    target: "Gagabhai",
+    targetHandle: "top",
+  },
+  {
+    id: "e-Kanubhai-Keshaben",
+    source: "Kanubhai",
+    sourceHandle: "right",
+    target: "Keshaben",
+    targetHandle: "left",
+  },
+  {
+    id: "e-Gagabhai-Krishnaben",
+    source: "Gagabhai",
+    sourceHandle: "right",
+    target: "Krishnaben",
+    targetHandle: "left",
+  },
+  {
+    id: "e-Gagabhai-Mihir",
+    source: "Gagabhai",
+    sourceHandle: "bottom",
+    target: "Mihir",
+    targetHandle: "top",
+  },
+  {
+    id: "e-Mihir-Jagruti",
+    source: "Mihir",
+    sourceHandle: "right",
+    target: "Jagruti",
+    targetHandle: "left",
+  },
+  {
+    id: "e-Mihir-Abhyant",
+    source: "Mihir",
+    sourceHandle: "bottom",
+    target: "Abhyant",
     targetHandle: "top",
   },
   {

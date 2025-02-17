@@ -1,13 +1,8 @@
-import { Handle, Position } from "reactflow";
+import { Handle } from "reactflow";
 import { MdEditSquare, MdDelete } from "react-icons/md";
 import Swal from "sweetalert2";
 
-const { Top, Bottom, Left, Right } = Position;
-
 const NodeComponent = ({ data }) => {
-  // const hasChildren =
-  //   (data?.member?.children?.length > 0 && data.member.relation === "Father") ||
-  //   data.member.relation === "Self";
   const hasChildren =
     data?.member?.children?.length > 0 &&
     (data.member.relation === "Father" || data.member.relation === "Self") &&
@@ -15,6 +10,7 @@ const NodeComponent = ({ data }) => {
       data?.member?.children?.length === 1 &&
       data?.member?.children[0] === data?.member?.id
     );
+  const allMembers = JSON.parse(localStorage.getItem("familyMembers"));
 
   const handleDeleteMember = (id) => {
     !hasChildren
@@ -51,15 +47,6 @@ const NodeComponent = ({ data }) => {
     data.setIsAddMemberVisible(true);
   };
 
-  const allMembers = JSON.parse(localStorage.getItem("familyMembers")) || [];
-  const marriedMembers = allMembers
-    .filter((m) => m.spouse.length > 0)
-    .map((m) => m.id);
-
-  const parents = allMembers
-    .filter((m) => m.children.length > 0)
-    .map((m) => m.id);
-
   return (
     <div className="py-3 px-5 bg-purple-100 border rounded shadow-lg flex flex-col items-start gap-4 h-auto w-auto">
       <p className="text-lg font-bold">
@@ -82,91 +69,11 @@ const NodeComponent = ({ data }) => {
         />
       </div>
 
-      {marriedMembers.includes(data?.member?.id) && (
-        <>
-          <Handle type="source" position={Right} id="right" />
-          <Handle type="target" position={Left} id="left" />
-        </>
-      )}
-      {parents.includes(data?.member?.id) && (
-        <>
-          <Handle type="source" position={Bottom} id="bottom" />
-          <Handle type="target" position={Top} id="top" />
-        </>
-      )}
-      {data.id === "Haribhai" && (
-        <>
-          <Handle
-            type="source"
-            position="right"
-            id="right"
-            className="!w-2 !h-2 !bg-gray-500"
-          />
-          <Handle
-            type="source"
-            position="bottom"
-            id="bottom"
-            className="!w-2 !h-2 !bg-gray-500"
-          />
-        </>
-      )}
+      {<Handle type="target" position="top" id="top" />}
+      {<Handle type="source" position="bottom" id="bottom" />}
 
-      {data.id === "Jamnaben" && (
-        <Handle
-          type="target"
-          position="left"
-          id="left"
-          className="!w-2 !h-2 !bg-gray-500"
-        />
-      )}
-
-      {data.id === "Manubhai" && (
-        <>
-          <Handle
-            type="source"
-            position="right"
-            id="right"
-            className="!w-2 !h-2 !bg-gray-500"
-          />
-          <Handle
-            type="source"
-            position="bottom"
-            id="bottom"
-            className="!w-2 !h-2 !bg-gray-500"
-          />
-          <Handle
-            type="target"
-            position="top"
-            id="top"
-            className="!w-2 !h-2 !bg-gray-500"
-          />
-        </>
-      )}
-
-      {data.id === "Chetanaben" && (
-        <Handle
-          type="target"
-          position="left"
-          id="left"
-          className="!w-2 !h-2 !bg-gray-500"
-        />
-      )}
-      {data.id === "Dip" && (
-        <Handle
-          type="target"
-          position="top"
-          id="top"
-          className="!w-2 !h-2 !bg-gray-500"
-        />
-      )}
-      {data.id === "Khushi" && (
-        <Handle
-          type="target"
-          position="top"
-          id="top"
-          className="!w-2 !h-2 !bg-gray-500"
-        />
-      )}
+      {<Handle type="source" position="right" id="right" />}
+      {<Handle type="target" position="left" id="left" />}
     </div>
   );
 };
