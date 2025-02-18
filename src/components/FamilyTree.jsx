@@ -2,19 +2,11 @@ import { useEffect, useMemo } from "react";
 import ReactFlow, {
   Background,
   Controls,
-  Position,
   useEdgesState,
   useNodesState,
 } from "reactflow";
 import NodeComponent from "./CustomNode";
-import {
-  findFather,
-  findWife,
-  isFather,
-  isWife,
-} from "./utils/commonFunctions";
 import { familyEdges, familyNodes } from "./Data/dummyData";
-const { Top, Bottom, Left, Right } = Position;
 
 const FamilyTreeNode = ({
   member,
@@ -24,220 +16,93 @@ const FamilyTreeNode = ({
   setIsAddMemberVisible,
 }) => {
   const initialEdges = member?.flatMap((memb) => {
-    const edges = [];
-    let sourceId = memb?.relatedMemberId;
+    let edges = [];
+    const { id, spouse, parents } = memb;
+    // Get father first
+    const father = parents?.find((p) => {
+      const parent = member.find((m) => m.id === p);
+      return parent?.gender === "Male";
+    });
+    // Get mother second
+    const mother = parents?.find((p) => {
+      const parent = member.find((m) => m.id === p);
+      return parent?.gender === "Female";
+    });
 
-    // let father = findFather(
-    //   member?.find((p) => p.relation === "Mother")?.relatedMemberId,
-    //   member
-    // );
-    // let BroOrSis = findFather(
-    //   member?.find((p) => p.relation === "Brother" || p.relation === "Sister")
-    //     ?.relatedMemberId,
-    //   member
-    // );
-    // const Mother = findFather(
-    //   member?.find((p) => p.relation === "Son" || p.relation === "Daughter")
-    //     ?.relatedMemberId,
-    //   member
-    // );
-    // const isMom = (id) => {
-    //   console.log(member.find((p) => p.id === id).relation === "Wife");
+    if ((father && parents?.length >= 0) || memb.gender === "Male") {
+      edges.push({
+        id: `edge-${id}-father`,
+        source: father,
+        target: memb?.id,
+        type: "smoothstep",
+        sourceHandle: "bottom",
+        targetHandle: "top",
+      });
 
-    //   return member.find((p) => p.id === id).relation === "Wife";
-    // };
-    const hasDad = (id) => {
-      return member.find((p) => p.id === id)?.parents.length > 1;
-    };
-    const findMom = (id) => {
-      return member.find((p) => p.id === id)?.parents[0];
-    };
-    const isDad = (id) => {
-      return member.find((p) => p.id === id).gender === "Male";
-    };
-    const findDad = (id) => {
-      return member.find((p) => p.id === id)?.spouse;
-      // return member.find((p) => p.id === id && p?.spouse?.filter((p) => p?.id !== id));
-    };
-    //   switch (memb?.relation) {
-    //     case "Wife":
-    //     case "Husband":
-    //       edges.push({
-    //         id: `edge-${memb?.id}`,
-    //         source: sourceId,
-    //         target: memb?.id,
-    //         type: "straight",
-    //         sourceHandle: "right",
-    //         targetHandle: "left",
-    //       });
-    //       break;
+      const allChildren = member?.filter((m) => m.parents?.includes(mother));
 
-    //     case "Son":
-    //     case "Daughter":
-    //       edges.push({
-    //         id: `edge-${memb?.id}`,
-    //         source:
-    //           isFather(memb?.relatedMemberId, member) &&
-    //           !isWife(memb?.relatedMemberId, member)
-    //             ? sourceId
-    //             : isFather(memb?.relatedMemberId, member) &&
-    //               isWife(memb?.relatedMemberId, member)
-    //             ? findWife(memb?.relatedMemberId, member)
-    //             : Mother,
-    //         target: memb?.id,
-    //         type: "smoothstep",
-    //         sourceHandle: "bottom",
-    //         targetHandle: "top",
-    //       });
-    //       break;
-
-    //     case "Brother":
-    //     case "Sister":
-    //       if (BroOrSis) {
-    //         edges.push({
-    //           id: `edge-${memb?.id}`,
-    //           source: isMom(BroOrSis)
-    //             ? findMom(BroOrSis)
-    //             : isFather(BroOrSis)
-    //             ? BroOrSis
-    //             : Mother,
-
-    //           target: memb?.id,
-    //           type: "smoothstep",
-    //           sourceHandle: "bottom",
-    //           targetHandle: "top",
-    //         });
-    //       }
-    //       break;
-
-    //     case "Father":
-    //       edges?.push({
-    //         id: `edge-${memb?.id}`,
-    //         source: memb?.id,
-    //         target: memb?.relatedMemberId,
-    //         type: "smoothstep",
-    //         sourceHandle: "bottom",
-    //         targetHandle: "top",
-    //       });
-    //       break;
-
-    //     case "Mother":
-    //       if (father) {
-    //         edges.push({
-    //           id: `edge-${memb?.id}`,
-    //           source: father,
-    //           target: memb?.id,
-    //           type: "straight",
-    //           sourceHandle: "right",
-    //           targetHandle: "left",
-    //         });
-    //       }
-    //       break;
-
-    //     default:
-    //       break;
-    //   }
-    //   return edges;
-    // });
-    const spouse = member.find((m) => m.id === memb.spouse);
-    const isCouple = !!spouse;
-
-    // Generate Merged Box ID
-    const coupleId = isCouple ? `merged-${memb.id}-${spouse.id}` : memb.id;
-
-    switch (memb?.relation) {
-      case "Wife":
+      allChildren?.forEach((child) => {
         edges.push({
-          id: `edge-${memb?.id}`,
-          source: sourceId,
-          target: memb?.id,
-          type: "straight",
-          sourceHandle: "right",
-          targetHandle: "left",
-        });
-        break;
-      case "Husband":
-        edges.push({
-          id: `edge-${memb?.id}`,
-          source: memb?.id,
-          target: sourceId,
-          type: "straight",
-          sourceHandle: "right",
-          targetHandle: "left",
-        });
-        break;
-      case "Son":
-      case "Daughter":
-        edges.push({
-          id: `edge-${memb?.id}`,
-          source: isDad(sourceId) ? sourceId : findDad(memb?.relatedMemberId),
-          target: memb?.id,
+          id: `edge-${child.id}-${id}`,
+          source: father,
+          target: child?.id,
           type: "smoothstep",
           sourceHandle: "bottom",
           targetHandle: "top",
         });
-        break;
-      case "Brother":
-      case "Sister":
-        edges.push({
-          id: `edge-${memb?.id}`,
-          source: isDad(memb?.parents[0])
-            ? memb?.parents[0]
-            : findDad(memb?.parents[0]),
-          target: memb?.id,
-          type: "smoothstep",
-          sourceHandle: "bottom",
-          targetHandle: "top",
-        });
-        break;
-      case "Father":
-        edges?.push({
-          id: `edge-${memb?.id}`,
-          source: memb?.id,
-          target: memb?.relatedMemberId,
-          type: "smoothstep",
-          sourceHandle: "bottom",
-          targetHandle: "top",
-        });
-        break;
-      case "Mother":
-        edges.push({
-          id: `edge-${memb?.id}`,
-          source: hasDad(memb.relatedMemberId)
-            ? findMom(memb.relatedMemberId)
-            : memb?.id,
-          target: hasDad(memb.relatedMemberId)
-            ? memb?.id
-            : memb?.relatedMemberId,
-          type: "straight",
-          sourceHandle: hasDad(memb.relatedMemberId) ? "right" : "bottom",
-          targetHandle: hasDad(memb.relatedMemberId) ? "left" : "top",
-        });
-        break;
-      default:
-        break;
+      });
     }
+
+    if (mother && parents?.length >= 0) {
+      edges.push({
+        id: `edge-${id}-mother`,
+        source: father ? father : mother,
+        target: father ? mother : memb.id,
+        type: "smoothstep",
+        sourceHandle: father ? "right" : "bottom",
+        targetHandle: father ? "left" : "top",
+      });
+    }
+    // Handle Spouse Connection
+    if (spouse.length > 0) {
+      edges.push({
+        id: `edge-${memb?.id}-spouse`,
+        source:
+          memb.relation === "Husband"
+            ? memb?.id
+            : memb.relation === "Wife"
+            ? memb.relatedMemberId
+            : father && father,
+        target:
+          memb.relation === "Husband"
+            ? memb.relatedMemberId
+            : memb.relation === "Wife"
+            ? memb.id
+            : mother && mother,
+        type: "smoothstep",
+        sourceHandle: "right",
+        targetHandle: "left",
+      });
+    }
+
     return edges;
   });
 
   const positionNodes = () => {
     let positions = {};
-    let siblingSpacing = 200;
-    let spouseSpacing = 100;
     let count = 100;
 
     member?.forEach((memb) => {
       if (!memb?.relatedMemberId) {
         positions[memb?.id] = { x: 0, y: 100 };
-      } else if (
-        memb?.relation === "Father" &&
-        positions[memb?.relatedMemberId]
-      ) {
+      }
+      if (memb?.relation === "Father" && positions[memb?.relatedMemberId]) {
         positions[memb?.id] = {
           x: positions[memb?.relatedMemberId]?.x,
-          y: positions[memb?.relatedMemberId]?.y - 300,
+          y: positions[memb?.relatedMemberId]?.y - 250,
         };
-      } else if (
+      }
+      if (
         memb?.relation === "Brother" ||
         (memb.relation === "Sister" && positions[memb?.relatedMemberId])
       ) {
@@ -246,44 +111,166 @@ const FamilyTreeNode = ({
           y: positions[memb?.relatedMemberId]?.y,
         };
         count += 200;
-      } else if (
+      }
+      if (
         (memb?.relation === "Wife" || memb?.relation === "Husband") &&
         positions[memb?.relatedMemberId]
       ) {
-        positions[memb?.relatedMemberId] = {
-          x: positions[memb?.relatedMemberId]?.x + spouseSpacing * 2,
-          y: positions[memb?.relatedMemberId]?.y,
-        };
         positions[memb?.id] = {
-          x: positions[memb?.relatedMemberId]?.x + spouseSpacing * 2,
-          y: positions[memb?.relatedMemberId]?.y,
-        };
-
-        count += 200;
-      } else if (
-        (memb?.relation === "Son" || memb?.relation === "Daughter") &&
-        positions[memb?.relatedMemberId]
-      ) {
-        positions[memb?.id] = {
-          x: positions[memb?.relatedMemberId]?.x + siblingSpacing * 2,
-          y: positions[memb?.relatedMemberId]?.y + 300,
-        };
-      } else if (memb.relation === "Mother") {
-        positions[memb?.id] = {
-          x:
-            positions[
-              findFather(
-                member?.find((p) => p.relation === "Mother")?.relatedMemberId,
-                member
-              )
-            ]?.x + 250,
+          x: positions[memb?.relatedMemberId]?.x + 210,
           y: positions[memb?.relatedMemberId]?.y,
         };
       }
+      if (
+        (memb?.relation === "Son" || memb?.relation === "Daughter") &&
+        positions[memb?.relatedMemberId]
+      ) {
+        const childrens = member.find(
+          (p) => p.id === memb.relatedMemberId
+        ).children;
+        positions[memb?.id] = {
+          x:
+            childrens?.length > 0
+              ? positions[childrens[0]]?.x - 210
+              : positions[memb?.relatedMemberId]?.x - 210,
+          y:
+            childrens?.length > 0
+              ? positions[childrens[0]]?.y
+              : positions[memb?.relatedMemberId]?.y + 300,
+        };
+      }
+
+      if (memb.relation === "Mother" && positions[memb?.relatedMemberId]) {
+        const hasFather = (id, memId) => {
+          const father = member
+            ?.find((p) => p.id === id)
+            .parents?.filter((p) => p !== memId);
+          return father;
+        };
+        positions[memb?.id] = {
+          x:
+            hasFather(memb?.relatedMemberId, memb.id).length > 0
+              ? positions[hasFather(memb?.relatedMemberId, memb.id)[0]]?.x + 210
+              : positions[memb?.relatedMemberId]?.x,
+          y:
+            hasFather(memb?.relatedMemberId, memb.id).length > 0
+              ? positions[hasFather(memb?.relatedMemberId, memb.id)[0]]?.y
+              : positions[memb?.relatedMemberId]?.y - 250,
+        };
+      }
+
+      // if (memb.relation === "Mother") {
+      //   positions[memb?.id] = {
+      //     x:
+      //       positions[
+      //         findFather(
+      //           member?.find((p) => p.relation === "Mother")?.relatedMemberId,
+      //           member
+      //         )
+      //       ]?.x + 250,
+      //     y: positions[memb?.relatedMemberId]?.y,
+      //   };
+      // }
     });
 
     return positions;
   };
+
+  // const positionNodes = () => {
+  //   let positions = {};
+  //   let siblingSpacing = 210;
+  //   let spouseSpacing = 210;
+  //   let verticalSpacing = 250;
+  //   let rootX = 0; // Track X position for new roots
+  //   let parentMap = {}; // Store parent-child relationships for alignment
+
+  //   member?.forEach((memb) => {
+  //     if (!memb?.relatedMemberId) {
+  //       positions[memb?.id] = { x: rootX, y: 100 };
+  //       rootX += siblingSpacing * 3;
+  //     }
+  //     // If the member has parents, align them properly
+  //     if (memb?.parents?.length > 0) {
+  //       let parentX = 0;
+  //       let count = 0;
+  //       let maxY = 0;
+
+  //       memb.parents.forEach((parentId) => {
+  //         if (positions[parentId]) {
+  //           parentX += positions[parentId].x;
+  //           maxY = Math.max(maxY, positions[parentId].y);
+  //           count++;
+  //         }
+  //       });
+
+  //       if (count > 0) {
+  //         positions[memb?.id] = {
+  //           x: parentX / count,
+  //           y: maxY + verticalSpacing,
+  //         };
+
+  //         // Track parent-child relationships for sibling positioning
+  //         if (!parentMap[memb.parents[0]]) {
+  //           parentMap[memb.parents[0]] = [];
+  //         }
+  //         parentMap[memb.parents[0]].push(memb.id);
+  //       }
+  //     }
+
+  //     // Position siblings next to each other
+  //     if (
+  //       memb?.relation === "Brother" ||
+  //       memb?.relation === "Sister" ||
+  //       memb?.relation === "Son" ||
+  //       memb?.relation === "Daughter"
+  //     ) {
+  //       let siblings = parentMap[memb?.parents?.[0]] || [];
+  //       let index = siblings.indexOf(memb.id);
+  //       if (index >= 0) {
+  //         positions[memb?.id].x += (index + 1) * siblingSpacing;
+  //         positions[memb?.id].y = 100;
+  //       }
+  //     }
+
+  //     // Position spouses side by side
+  //     if (
+  //       (memb?.relation === "Wife" || memb?.relation === "Husband") &&
+  //       positions[memb?.relatedMemberId]
+  //     ) {
+  //       positions[memb?.id] = {
+  //         x: positions[memb?.relatedMemberId]?.x + spouseSpacing,
+  //         y: positions[memb?.relatedMemberId]?.y,
+  //       };
+  //     }
+  // if (memb.relation === "Mother" && positions[memb?.relatedMemberId]) {
+  //   const hasFather = (id, memId) => {
+  //     const father = member
+  //       ?.find((p) => p.id === id)
+  //       .parents?.filter((p) => p !== memId);
+  //     return father;
+  //   };
+  //   positions[memb?.id] = {
+  //     x:
+  //       hasFather(memb?.relatedMemberId, memb.id).length > 0
+  //         ? positions[hasFather(memb?.relatedMemberId, memb.id)[0]]?.x + 210
+  //         : positions[memb?.relatedMemberId]?.x,
+  //     y:
+  //       hasFather(memb?.relatedMemberId, memb.id).length > 0
+  //         ? positions[hasFather(memb?.relatedMemberId, memb.id)[0]]?.y
+  //         : positions[memb?.relatedMemberId]?.y - 250,
+  //   };
+  // }
+  //     if (memb?.relation === "Father" && positions[memb?.relatedMemberId]) {
+  //       positions[memb?.id] = {
+  //         x: positions[memb?.relatedMemberId]?.x,
+  //         y: positions[memb?.relatedMemberId]?.y - 250,
+  //       };
+  //     }
+  //   });
+
+  //   return positions;
+  // };
+
   const nodePositions = positionNodes();
 
   const initialNodes = member?.map((member) => ({
@@ -301,18 +288,6 @@ const FamilyTreeNode = ({
       setIsAddMemberVisible: setIsAddMemberVisible,
     },
     position: nodePositions[member?.id] || { x: 0, y: 0 },
-    sourcePosition:
-      member?.relation === "Wife" ||
-      member?.relation === "Husband" ||
-      member?.relation === "Mother"
-        ? Left
-        : Bottom,
-    targetPosition:
-      member?.relation === "Wife" ||
-      member?.relation === "Husband" ||
-      member?.relation === "Mother"
-        ? Right
-        : Top,
   }));
 
   useEffect(() => {
@@ -327,6 +302,48 @@ const FamilyTreeNode = ({
 
   const [nodes, setNodes, onNodesChange] = useNodesState(familyNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(familyEdges);
+
+  useEffect(() => {
+    member?.forEach((memb) => {
+      const { parents } = memb;
+      const father = parents?.find((p) => {
+        const parent = member.find((m) => m.id === p);
+        return parent?.gender === "Male";
+      });
+      // Get mother second
+      const mother = parents?.find((p) => {
+        const parent = member?.find((m) => m.id === p);
+        return parent?.gender === "Female";
+      });
+
+      if (father && mother) {
+        console.log("inside if");
+
+        setEdges((prevEdges) => {
+          const newEdges = prevEdges.filter((edge) => edge.source !== mother);
+          return newEdges;
+        });
+      }
+    });
+  }, [member]);
+
+  useEffect(() => {
+    member?.forEach((memb) => {
+      const { parents, spouse } = memb;
+      const father = parents?.find((p) => {
+        const parent = member.find((m) => m.id === p);
+        return parent?.gender === "Male";
+      });
+      // Get mother second
+      const mother = parents?.find((p) => {
+        const parent = member?.find((m) => m.id === p);
+        return parent?.gender === "Female";
+      });
+      let couple = member?.find((m) => m.id === spouse);
+      console.log(couple);
+      console.log(nodes, "nodes");
+    });
+  }, [member]);
 
   const nodeTypes = useMemo(() => ({ custom: NodeComponent }), []);
 

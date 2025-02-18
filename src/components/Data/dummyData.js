@@ -165,6 +165,7 @@ export const familyEdges = [
     sourceHandle: "right",
     target: "Jamnaben",
     targetHandle: "left",
+    type: "smoothstep",
   },
   {
     id: "e-Haribhai-Manubhai",
@@ -172,6 +173,7 @@ export const familyEdges = [
     sourceHandle: "bottom",
     target: "Manubhai",
     targetHandle: "top",
+    type: "smoothstep",
   },
   {
     id: "e-Haribhai-Kanubhai",
@@ -179,6 +181,7 @@ export const familyEdges = [
     sourceHandle: "bottom",
     target: "Kanubhai",
     targetHandle: "top",
+    type: "smoothstep",
   },
   {
     id: "e-Haribhai-Gagabhai",
@@ -186,6 +189,7 @@ export const familyEdges = [
     sourceHandle: "bottom",
     target: "Gagabhai",
     targetHandle: "top",
+    type: "smoothstep",
   },
   {
     id: "e-Kanubhai-Keshaben",
@@ -193,6 +197,7 @@ export const familyEdges = [
     sourceHandle: "right",
     target: "Keshaben",
     targetHandle: "left",
+    type: "smoothstep",
   },
   {
     id: "e-Gagabhai-Krishnaben",
@@ -200,6 +205,7 @@ export const familyEdges = [
     sourceHandle: "right",
     target: "Krishnaben",
     targetHandle: "left",
+    type: "smoothstep",
   },
   {
     id: "e-Gagabhai-Mihir",
@@ -207,6 +213,7 @@ export const familyEdges = [
     sourceHandle: "bottom",
     target: "Mihir",
     targetHandle: "top",
+    type: "smoothstep",
   },
   {
     id: "e-Mihir-Jagruti",
@@ -214,6 +221,7 @@ export const familyEdges = [
     sourceHandle: "right",
     target: "Jagruti",
     targetHandle: "left",
+    type: "smoothstep",
   },
   {
     id: "e-Mihir-Abhyant",
@@ -221,6 +229,7 @@ export const familyEdges = [
     sourceHandle: "bottom",
     target: "Abhyant",
     targetHandle: "top",
+    type: "smoothstep",
   },
   {
     id: "e-Manubhai-Chetanaben",
@@ -228,6 +237,7 @@ export const familyEdges = [
     sourceHandle: "right",
     target: "Chetanaben",
     targetHandle: "left",
+    type: "smoothstep",
   },
   {
     id: "e-Maunubhai-Dip",
@@ -235,6 +245,7 @@ export const familyEdges = [
     sourceHandle: "bottom",
     target: "Dip",
     targetHandle: "top",
+    type: "smoothstep",
   },
   {
     id: "e-Maunubhai-Khushi",
@@ -242,5 +253,7 @@ export const familyEdges = [
     sourceHandle: "bottom",
     target: "Khushi",
     targetHandle: "top",
+    type: "smoothstep",
   },
 ];
+
