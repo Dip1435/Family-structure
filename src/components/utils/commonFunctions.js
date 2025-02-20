@@ -16,9 +16,6 @@ export const isFather = (id, member) => {
     member?.find((p) => p.id === id)?.relation === "Son" ||
     member?.find((p) => p.id === id)?.relation === "Brother" ||
     member?.find((p) => p.id === id)?.relation === "Husband"
-    // member?.find((p) => p.id === id)?.relation === "Wife" ||
-    // member?.find((p) => p.id === id)?.relation === "Daughter" ||
-    // member?.find((p) => p.id === id)?.relation === "Sister"
   );
 };
 export const isWife = (id, member) => {

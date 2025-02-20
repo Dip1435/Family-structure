@@ -26,8 +26,7 @@ const NodeComponent = ({ data }) => {
     // familyMembers = familyMembers.filter((member) => member.id !== id);
     // localStorage.setItem("familyMembers", JSON.stringify(familyMembers));
 
-    !hasChildren
-      ? Swal.fire({
+   Swal.fire({
           title: "Are you sure?",
           text: "You won't be able to revert this!",
           icon: "warning",
@@ -47,11 +46,11 @@ const NodeComponent = ({ data }) => {
             });
           }
         })
-      : Swal.fire({
-          title: "Error!",
-          text: "You can't delete this member because they have children.",
-          icon: "error",
-        });
+      // : Swal.fire({
+      //     title: "Error!",
+      //     text: "You can't delete this member because they have children.",
+      //     icon: "error",
+      //   });
   };
 
   const handleEditMember = () => {

@@ -20,34 +20,22 @@ const AddMember = ({
     dob: Yup.string().required("Date of Birth is required"),
     gender: Yup.string().required("Gender is required"),
     relation: Yup.string().required("Relation is required"),
-    // relatedMemberId: Yup.string().when("relation", {
-    //   is: (relation) => relation && relation !== "Self",
-    //   then: Yup.string().required("Please select a related member"),
-    //   otherwise: Yup.string().notRequired(),
-    // }),
-  });
+    relatedMemberId: Yup.string().when("relation", (relation, schema) =>
+      relation == "Self"
+        ? schema.notRequired()
+        : schema.required("Related member is required")
+    ),
+  }).noUnknown();
 
-  // const isRelationAllowed = (relatedId, relation) => {
-  //   const relatedMember = member.find((m) => m.id === relatedId);
-  //   if (!relatedMember) return true;
+  const isRelationAllowed = (relatedId, relation) => {
+    const relatedMember = member.find((m) => m.id === relatedId);
+    if (!relatedMember) return true;
 
-  //   if (relation === "Husband" || relation === "Wife") {
-  //     return !relatedMember.spouse?.length; // Check if they already have a spouse
-  //   }
-  //   if (relation === "Father") {
-  //     return !relatedMember.parents?.some((pId) => {
-  //       const parent = member.find((m) => m.id === pId);
-  //       return parent?.gender === "Male";
-  //     });
-  //   }
-  //   if (relation === "Mother") {
-  //     return !relatedMember.parents?.some((pId) => {
-  //       const parent = member.find((m) => m.id === pId);
-  //       return parent?.gender === "Female";
-  //     });
-  //   }
-  //   return true;
-  // };
+    if (relation === "Husband" || relation === "Wife") {
+      return !relatedMember.spouse?.length; // Check if they already have a spouse
+    }
+    return true;
+  };
 
   const formik = useFormik({
     initialValues: {
@@ -61,13 +49,40 @@ const AddMember = ({
     enableReinitialize: true,
 
     onSubmit: (values) => {
-      // if (
-      //   !isRelationAllowed(values.relatedMemberId, values.relation) &&
-      //   !selectedMember
-      // ) {
-      //   toast.error(`The selected person already has a ${values.relation}.`);
-      //   return;
-      // } else if (
+      if (
+        !isRelationAllowed(values.relatedMemberId, values.relation) &&
+        !selectedMember
+      ) {
+        toast.error(`The selected person already has a ${values.relation}.`);
+        return;
+      }
+      if (values.relation === "Husband") {
+        const relatedMember = member.find(
+          (m) => m.id === values.relatedMemberId
+        );
+        if (relatedMember.gender === "Male") {
+          toast.error("Husband can only be added to a female member.");
+          return;
+        }
+      }
+      if (values.relation === "Wife") {
+        const relatedMember = member.find(
+          (m) => m.id === values.relatedMemberId
+        );
+        if (relatedMember.gender === "Female") {
+          toast.error("Wife can only be added to a male member.");
+          return;
+        }
+      }
+      if (values.relation === "Brother" || values.relation === "Sister") {
+        let id = values.relatedMemberId;
+        let relatedMember = member.find((m) => m.id === id);
+        if (relatedMember.parents.length < 1) {
+          toast.error("You must add a parent before adding siblings.");
+          return;
+        }
+      }
+      //  else if (
       //   values.relation === "Brother" ||
       //   values.relation === "Sister"
       // ) {
@@ -112,53 +127,6 @@ const AddMember = ({
         updatedMembers.push(newMember);
         formik.resetForm();
       }
-      // if (values.relatedMemberId) {
-      //   updatedMembers = updatedMembers.map((m) => {
-      //     if (m.id === values.relatedMemberId) {
-      //       if (values.relation === "Son" || values.relation === "Daughter") {
-      //         return { ...m, children: [...(m.children || []), newMemberId] };
-      //       }
-      //       if (values.relation === "Husband" || values.relation === "Wife") {
-      //         return { ...m, spouse: [newMemberId] };
-      //       }
-      //       if (values.relation === "Mother") {
-      //         return {
-      //           ...m,
-      //           spouse: [...(m.relatedMemberId || []), newMemberId],
-      //         };
-      //       }
-      //     }
-      //     return m;
-      //   });
-
-      //   if (
-      //     values.relation === "Husband" ||
-      //     values.relation === "Wife" ||
-      //     values.relation === "Mother"
-      //   ) {
-      //     updatedMembers = updatedMembers.map((m) => {
-      //       if (m.id === newMemberId) {
-      //         return { ...m, spouse: [values.relatedMemberId] }; // Set spouse ID only if it's a marital relation
-      //       }
-      //       return m;
-      //     });
-      //   }
-      //   if (
-      //     values.relation === "Son" ||
-      //     values.relation === "Daughter" ||
-      //     values.relation === "Brother" ||
-      //     values.relation === "Sister" ||
-      //     values.relation === "Father" ||
-      //     values.relation === "Mother"
-      //   ) {
-      //     updatedMembers = updatedMembers.map((m) => {
-      //       if (m.id === newMemberId) {
-      //         return { ...m, children: [values.relatedMemberId] }; // Set spouse ID only if it's a marital relation
-      //       }
-      //       return m;
-      //     });
-      //   }
-      // }
       if (relatedMember) {
         updatedMembers = updatedMembers?.map((m) => {
           if (m.id === values.relatedMemberId) {
@@ -197,11 +165,15 @@ const AddMember = ({
               return { ...m, parents: [...(relatedMember.parents || [])] }; // Inherit parents
             }
             if (values.relation === "Father" || values.relation === "Mother") {
+              // const relatedMember = member?.find(
+              //   (m) => m.id === values.relatedMemberId
+              // );
               return {
                 ...m,
                 children: [
                   ...new Set([...(m.children || []), values.relatedMemberId]),
                 ],
+                // spouse: [...(relatedMember?.parents || [])],
               };
             }
           }
@@ -223,12 +195,35 @@ const AddMember = ({
             });
           });
         }
+
+        if (values.relation === "Mother" || values.relation === "Father") {
+          const child = updatedMembers.find(
+            (m) => m.id === values.relatedMemberId
+          );
+          if (child) {
+            const existingParentId = child.parents?.find(
+              (p) => p !== newMemberId
+            ); // Find existing parent
+            if (existingParentId) {
+              updatedMembers = updatedMembers.map((m) => {
+                if (m.id === existingParentId) {
+                  return { ...m, spouse: newMemberId }; // Set spouse for existing parent
+                }
+                if (m.id === newMemberId) {
+                  return { ...m, spouse: existingParentId }; // Set spouse for new parent
+                }
+                return m;
+              });
+            }
+          }
+        }
       }
       setMember(updatedMembers);
       setIsAddMemberVisible(false);
       formik.resetForm();
     },
   });
+  const hasRootMember = member.some((m) => m.relation === "Self");
 
   return (
     <>
@@ -275,6 +270,7 @@ const AddMember = ({
                         name="name"
                         value={formik.values.name}
                         onChange={formik.handleChange}
+                        // autoComplete="off"
                         className="outline rounded-lg p-2"
                       />
                       {formik.touched.name && formik.errors.name && (
@@ -305,7 +301,6 @@ const AddMember = ({
                       {formik.touched.gender && formik.errors.gender && (
                         <p className="text-red-500">{formik.errors.gender}</p>
                       )}
-
                       <select
                         name="relation"
                         value={formik.values.relation}
@@ -313,17 +308,18 @@ const AddMember = ({
                         className="border p-2 rounded-lg"
                       >
                         <option value="">Select Relation</option>
-                        {formik.values.gender === "Male"
-                          ? femaleRelations?.map((relation) => (
-                              <option key={relation} value={relation}>
-                                {relation}
-                              </option>
-                            ))
-                          : maleRelations?.map((relation) => (
-                              <option key={relation} value={relation}>
-                                {relation}
-                              </option>
-                            ))}
+                        {(formik.values.gender === "Male"
+                          ? femaleRelations
+                          : maleRelations
+                        )
+                          ?.filter(
+                            (relation) => relation !== "Self" || !hasRootMember
+                          )
+                          ?.map((relation) => (
+                            <option key={relation} value={relation}>
+                              {relation}
+                            </option>
+                          ))}
                       </select>
                       {formik.touched.relation && formik.errors.relation && (
                         <p className="text-red-500">{formik.errors.relation}</p>
@@ -372,6 +368,7 @@ const AddMember = ({
                           className={`bg-red-600 text-white px-4 py-2 rounded-lg`}
                           onClick={() => {
                             setIsAddMemberVisible(false);
+                            formik.resetForm();
                           }}
                         >
                           Cancel
