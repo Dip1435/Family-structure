@@ -11,7 +11,7 @@ const NodeComponent = ({ data }) => {
       data?.member?.children[0] === data?.member?.id
     );
   const handleDeleteMember = (id) => {
-    // let familyMembers = JSON.parse(localStorage.getItem("familyMembers"));
+    let familyMembers = JSON.parse(localStorage.getItem("familyMembers"));
     // const memberToDelete = data.member.id === id;
     // if (!memberToDelete) return;
     // familyMembers = familyMembers.map((member) => {
@@ -26,31 +26,43 @@ const NodeComponent = ({ data }) => {
     // familyMembers = familyMembers.filter((member) => member.id !== id);
     // localStorage.setItem("familyMembers", JSON.stringify(familyMembers));
 
-   Swal.fire({
-          title: "Are you sure?",
-          text: "You won't be able to revert this!",
-          icon: "warning",
-          showCancelButton: true,
-          confirmButtonColor: "#3085d6",
-          cancelButtonColor: "#d33",
-          confirmButtonText: "Yes, delete it!",
-        }).then((result) => {
-          if (result.isConfirmed) {
-            data.setMember((prevMembers) =>
-              prevMembers.filter((m) => m.id !== id)
-            );
-            Swal.fire({
-              title: "Deleted!",
-              text: "Your file has been deleted.",
-              icon: "success",
-            });
-          }
-        })
-      // : Swal.fire({
-      //     title: "Error!",
-      //     text: "You can't delete this member because they have children.",
-      //     icon: "error",
-      //   });
+    let updatedMembers = [...familyMembers];
+
+    Swal.fire({
+      title: "Are you sure?",
+      text: "You won't be able to revert this!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Yes, delete it!",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        updatedMembers = updatedMembers.map((m) => {
+          return {
+            ...m,
+            spouse: m.spouse === id ? null : m.spouse, // Remove spouse
+            children: m.children?.filter((childId) => childId !== id), // Remove from children
+            parents: m.parents?.filter((parentId) => parentId !== id), // Remove from parents
+          };
+        });
+        updatedMembers = updatedMembers.filter((m) => m.id !== id);
+        data.setMember(updatedMembers);
+
+        localStorage.setItem("familyMembers", JSON.stringify(updatedMembers));
+
+        Swal.fire({
+          title: "Deleted!",
+          text: "Your file has been deleted.",
+          icon: "success",
+        });
+      }
+    });
+    // : Swal.fire({
+    //     title: "Error!",
+    //     text: "You can't delete this member because they have children.",
+    //     icon: "error",
+    //   });
   };
 
   const handleEditMember = () => {
@@ -60,7 +72,7 @@ const NodeComponent = ({ data }) => {
   };
 
   return (
-    <div className="py-3 px-5 bg-purple-100 border rounded shadow-lg flex flex-col items-start gap-4 h-auto w-auto">
+    <div className="py-3 px-5 bg-purple-100 border border-purple-500 rounded shadow-lg flex flex-col items-start gap-4 h-auto w-auto">
       <>
         <p className="text-lg font-bold">
           Name : <span className="text-lg font-medium"> {data.label} </span>
@@ -83,11 +95,39 @@ const NodeComponent = ({ data }) => {
         </div>
       </>
 
-      {<Handle type="target" position="top" id="top" />}
-      {<Handle type="source" position="bottom" id="bottom" />}
+      {
+        <Handle
+          type="target"
+          position="top"
+          id="top"
+          className="w-16 !bg-purple-700"
+        />
+      }
+      {
+        <Handle
+          type="source"
+          position="bottom"
+          id="bottom"
+          className="w-16 !bg-purple-700"
+        />
+      }
 
-      {<Handle type="source" position="right" id="right" />}
-      {<Handle type="target" position="left" id="left" />}
+      {
+        <Handle
+          type="source"
+          position="right"
+          id="right"
+          className="w-16 !bg-purple-700"
+        />
+      }
+      {
+        <Handle
+          type="target"
+          position="left"
+          id="left"
+          className="w-16 !bg-purple-700"
+        />
+      }
     </div>
   );
 };

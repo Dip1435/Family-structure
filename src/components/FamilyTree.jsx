@@ -1,7 +1,11 @@
-import { useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import ReactFlow, {
+  applyNodeChanges,
   Background,
   Controls,
+  getConnectedEdges,
+  getIncomers,
+  getOutgoers,
   useEdgesState,
   useNodesState,
 } from "reactflow";
@@ -15,7 +19,6 @@ const FamilyTreeNode = ({
   setFormData,
   setIsAddMemberVisible,
 }) => {
-
   const generateCoupleKey = (id1, id2) => [id1, id2].sort().join("-"); // Generate a unique key for a couple
 
   const coupleMap = new Map(); // Map to track couples
@@ -107,121 +110,14 @@ const FamilyTreeNode = ({
         targetHandle: "left",
       });
     }
-
-    // if (
-    //   parents?.length < 1 &&
-    //   (memb.relation === "Brother" || memb.relation === "Sister")
-    // ) {
-    //   edges.push({
-    //     id: `edge-${id}-sibing`,
-    //     source: memb.id,
-    //     target: memb.relatedMemberId,
-    //     type: "smoothstep",
-    //     sourceHandle: "right",
-    //     targetHandle: "left",
-    //   });
-    // }
-
     return edges;
   });
-
-  // const positionNodes = () => {
-  //   let positions = {};
-  //   let count = 100;
-
-  //   member?.forEach((memb) => {
-  //     if (!memb?.relatedMemberId) {
-  //       positions[memb?.id] = { x: 0, y: 100 };
-  //     }
-  //     if (memb?.relation === "Father" && positions[memb?.relatedMemberId]) {
-  //       positions[memb?.id] = {
-  //         x: positions[memb?.relatedMemberId]?.x,
-  //         y: positions[memb?.relatedMemberId]?.y - 250,
-  //       };
-  //     }
-  //     if (
-  //       memb?.relation === "Brother" ||
-  //       (memb.relation === "Sister" && positions[memb?.relatedMemberId])
-  //     ) {
-  //       positions[memb?.id] = {
-  //         x: positions[memb?.relatedMemberId]?.x - count * 2,
-  //         y: positions[memb?.relatedMemberId]?.y,
-  //       };
-  //       count += 200;
-  //     }
-  //     if (
-  //       (memb?.relation === "Wife" || memb?.relation === "Husband") &&
-  //       positions[memb?.relatedMemberId]
-  //     ) {
-  //       positions[memb?.id] = {
-  //         x: positions[memb?.relatedMemberId]?.x + 210,
-  //         y: positions[memb?.relatedMemberId]?.y,
-  //       };
-  //     }
-  //     if (
-  //       (memb?.relation === "Son" || memb?.relation === "Daughter") &&
-  //       positions[memb?.relatedMemberId]
-  //     ) {
-  //       // const childrens = member.find(
-  //       //   (p) => p.id === memb.relatedMemberId
-  //       // ).children;
-  //       // positions[memb?.id] = {
-  //       //   x:
-  //       //     childrens?.length > 0
-  //       //       ? positions[childrens[0]]?.x - 210
-  //       //       : positions[memb?.relatedMemberId]?.x - 210,
-  //       //   y:
-  //       //     childrens?.length > 0
-  //       //       ? positions[childrens[0]]?.y
-  //       //       : positions[memb?.relatedMemberId]?.y + 500,
-  //       // };
-  //       positions[memb?.id] = {
-  //         x: positions[memb?.relatedMemberId]?.x - 250,
-  //         y: positions[memb?.relatedMemberId]?.y + 300,
-  //       };
-  //     }
-
-  //     // if (memb.relation === "Mother" && positions[memb?.relatedMemberId]) {
-  //     //   const hasFather = (id, memId) => {
-  //     //     const father = member
-  //     //       ?.find((p) => p.id === id)
-  //     //       .parents?.filter((p) => p !== memId);
-  //     //     return father;
-  //     //   };
-  //     //   positions[memb?.id] = {
-  //     //     x:
-  //     //       hasFather(memb?.relatedMemberId, memb.id).length > 0
-  //     //         ? positions[hasFather(memb?.relatedMemberId, memb.id)[0]]?.x + 210
-  //     //         : positions[memb?.relatedMemberId]?.x,
-  //     //     y:
-  //     //       hasFather(memb?.relatedMemberId, memb.id).length > 0
-  //     //         ? positions[hasFather(memb?.relatedMemberId, memb.id)[0]]?.y
-  //     //         : positions[memb?.relatedMemberId]?.y - 250,
-  //     //   };
-  //     // }
-
-  //     if (memb.relation === "Mother") {
-  //       positions[memb?.id] = {
-  //         x:
-  //           positions[
-  //             findFather(
-  //               member?.find((p) => p.relation === "Mother")?.relatedMemberId,
-  //               member
-  //             )
-  //           ]?.x + 250,
-  //         y: positions[memb?.relatedMemberId]?.y - 250,
-  //       };
-  //     }
-  //   });
-
-  //   return positions;
-  // };
 
   const positionNodes = () => {
     let positions = {};
     let siblingSpacing = 450; // Space between siblings
     let generationSpacing = 280; // Space between generations
-    let spouseSpacing = 200; // Space between spouses
+    let spouseSpacing = 250; // Space between spouses
 
     let visited = new Set();
 
@@ -233,7 +129,7 @@ const FamilyTreeNode = ({
 
       // Place root members at (0,100)
       if (!memb?.relatedMemberId) {
-        positions[memb.id] = { x: 0, y: 100 };
+        positions[memb.id] = { x: 0, y: 300 };
       }
 
       // Position Fathers
@@ -363,6 +259,23 @@ const FamilyTreeNode = ({
         const spouseMember = member?.find((m) => m?.id === spouseId);
         if (!spouseMember) return;
 
+        // Create couple node
+        const coupleNode = {
+          id: coupleKey,
+          type: "default",
+          data: null,
+          position: {
+            x: nodePositions[memberId]?.x - 60 || 0,
+            y: nodePositions[memberId]?.y - 50 || 0,
+          },
+          style: {
+            width: 480,
+            height: 240,
+            backgroundColor: "rgba(240,240,240,0.20)",
+            borderColor: "oklch(0.627 0.265 303.9)",
+          },
+        };
+
         const coupleNodes = nodes
           ?.filter(
             (node) => node?.id === memberId || node?.id === spouseMember?.id
@@ -371,23 +284,22 @@ const FamilyTreeNode = ({
             ...node,
             parentId: coupleKey,
             extent: "parent",
+            position: {
+              x: node.position.x + 20,
+              y: node.position.y + 200,
+            },
           }));
-        // Create couple node
-        const coupleNode = {
-          id: coupleKey,
-          type: "input output",
-          data: null,
-          position: {
-            x: nodePositions[memberId]?.x + 20 || 0,
-            y: nodePositions[memberId]?.y + 20 || 0,
-          },
-          style: {
-            width: 480,
-            height: 240,
-            backgroundColor: "rgba(240,240,240,0.25)",
-          },
-        };
         setNodes((prevNodes) => [...prevNodes, coupleNode, ...coupleNodes]);
+        setEdges((prevEdges) =>
+          prevEdges.filter((edge) => {
+            return !(
+              edge.source === memberId ||
+              edge.source === spouseId ||
+              edge.target === memberId ||
+              edge.target === spouseId
+            );
+          })
+        );
       }
     });
   }, [member]);
@@ -419,6 +331,35 @@ const FamilyTreeNode = ({
 
   const nodeTypes = useMemo(() => ({ custom: NodeComponent }), []);
 
+  const onNodesDelete = useCallback(
+    (deleted) => {
+      console.log(deleted);
+
+      // setEdges(
+      //   deleted.reduce((acc, node) => {
+      //     const incomers = getIncomers(node, nodes, edges);
+      //     const outgoers = getOutgoers(node, nodes, edges);
+      //     const connectedEdges = getConnectedEdges([node], edges);
+
+      //     const remainingEdges = acc.filter(
+      //       (edge) => !connectedEdges.includes(edge)
+      //     );
+
+      //     const createdEdges = incomers.flatMap(({ id: source }) =>
+      //       outgoers.map(({ id: target }) => ({
+      //         id: `${source}->${target}`,
+      //         source,
+      //         target,
+      //       }))
+      //     );
+
+      //     return [...remainingEdges, ...createdEdges];
+      //   }, edges)
+      // );
+    },
+    [member]
+  );
+
   return (
     <div className=" w-full h-full overflow-hidden">
       <ReactFlow
@@ -426,6 +367,7 @@ const FamilyTreeNode = ({
         edges={edges}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
+        onNodesDelete={onNodesDelete}
         nodeTypes={nodeTypes}
         fitView
       >

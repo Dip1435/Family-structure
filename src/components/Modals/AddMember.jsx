@@ -25,7 +25,7 @@ const AddMember = ({
         ? schema.notRequired()
         : schema.required("Related member is required")
     ),
-  }).noUnknown();
+  });
 
   const isRelationAllowed = (relatedId, relation) => {
     const relatedMember = member.find((m) => m.id === relatedId);
@@ -82,27 +82,6 @@ const AddMember = ({
           return;
         }
       }
-      //  else if (
-      //   values.relation === "Brother" ||
-      //   values.relation === "Sister"
-      // ) {
-      //   let id = values.relatedMemberId;
-      //   let relatedMember = member.find((m) => m.id === id);
-      //   if (
-      //     relatedMember.relation === "Father" ||
-      //     relatedMember.relation === "Self" ||
-      //     relatedMember.relation === "Mother" ||
-      //     relatedMember.relation === "Husband" ||
-      //     relatedMember.relation === "Wife"
-      //   ) {
-      //     toast.error(`Cant add relation`);
-      //     return;
-      //   }
-      // } else if (values.relation === "Self" && values.gender === "Female") {
-      //   toast.error(`Cant add Female as root member`);
-      //   return;
-      // }
-
       let updatedMembers = [...member];
       const newMemberId = selectedMember ? selectedMember?.id : uuidv4();
       const relatedMember = member?.find(
@@ -259,7 +238,7 @@ const AddMember = ({
                   >
                     Add Member
                   </Dialog.Title>
-                  <div className="bg-white rounded-lg">
+                  {/* <div className="bg-white rounded-lg">
                     <form
                       onSubmit={formik.handleSubmit}
                       className="flex flex-col gap-4 p-5"
@@ -366,6 +345,158 @@ const AddMember = ({
                         </button>
                         <button
                           className={`bg-red-600 text-white px-4 py-2 rounded-lg`}
+                          onClick={() => {
+                            setIsAddMemberVisible(false);
+                            formik.resetForm();
+                          }}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </form>
+                  </div> */}
+                  <div className="bg-white rounded-lg shadow-md max-w-md mx-auto p-6">
+                    <form
+                      onSubmit={formik.handleSubmit}
+                      className="flex flex-col space-y-4"
+                    >
+                      {/* Name Input */}
+                      <label className="text-sm font-semibold">
+                        Name
+                        <input
+                          type="text"
+                          placeholder="Enter name"
+                          name="name"
+                          value={formik.values.name}
+                          onChange={formik.handleChange}
+                          className="border border-gray-300 rounded-lg p-2 w-full focus:ring focus:ring-blue-300 outline-none"
+                        />
+                      </label>
+                      {formik.touched.name && formik.errors.name && (
+                        <p className="text-red-500 text-sm">
+                          {formik.errors.name}
+                        </p>
+                      )}
+
+                      {/* Date of Birth */}
+                      <label className="text-sm font-semibold">
+                        Date of Birth
+                        <input
+                          type="date"
+                          name="dob"
+                          value={formik.values.dob}
+                          onChange={formik.handleChange}
+                          className="border border-gray-300 rounded-lg p-2 w-full focus:ring focus:ring-blue-300 outline-none"
+                        />
+                      </label>
+                      {formik.touched.dob && formik.errors.dob && (
+                        <p className="text-red-500 text-sm">
+                          {formik.errors.dob}
+                        </p>
+                      )}
+
+                      {/* Gender Selection */}
+                      <label className="text-sm font-semibold">
+                        Gender
+                        <select
+                          name="gender"
+                          value={formik.values.gender}
+                          onChange={formik.handleChange}
+                          className="border border-gray-300 p-2 rounded-lg w-full focus:ring focus:ring-blue-300 outline-none"
+                        >
+                          <option value="">Select Gender</option>
+                          <option value="Male">Male</option>
+                          <option value="Female">Female</option>
+                        </select>
+                      </label>
+                      {formik.touched.gender && formik.errors.gender && (
+                        <p className="text-red-500 text-sm">
+                          {formik.errors.gender}
+                        </p>
+                      )}
+
+                      {/* Relation Selection */}
+                      <label className="text-sm font-semibold">
+                        Relation
+                        <select
+                          name="relation"
+                          value={formik.values.relation}
+                          onChange={formik.handleChange}
+                          className="border border-gray-300 p-2 rounded-lg w-full focus:ring focus:ring-blue-300 outline-none"
+                        >
+                          <option value="">Select Relation</option>
+                          {(formik.values.gender === "Male"
+                            ? femaleRelations
+                            : maleRelations
+                          )
+                            ?.filter(
+                              (relation) =>
+                                relation !== "Self" || !hasRootMember
+                            )
+                            ?.map((relation) => (
+                              <option key={relation} value={relation}>
+                                {relation}
+                              </option>
+                            ))}
+                        </select>
+                      </label>
+                      {formik.touched.relation && formik.errors.relation && (
+                        <p className="text-red-500 text-sm">
+                          {formik.errors.relation}
+                        </p>
+                      )}
+
+                      {/* Related Member Selection */}
+                      {formik.values.relation &&
+                        formik.values.relation !== "Self" && (
+                          <label className="text-sm font-semibold">
+                            Related Member
+                            <select
+                              name="relatedMemberId"
+                              value={formik.values.relatedMemberId}
+                              onChange={formik.handleChange}
+                              className="border border-gray-300 p-2 rounded-lg w-full focus:ring focus:ring-blue-300 outline-none"
+                            >
+                              <option value="">Select Related Member</option>
+                              {member?.map((m) => (
+                                <option key={m.id} value={m.id}>
+                                  {m.name}
+                                </option>
+                              ))}
+                            </select>
+                          </label>
+                        )}
+                      {formik.touched.relatedMemberId &&
+                        formik.errors.relatedMemberId && (
+                          <p className="text-red-500 text-sm">
+                            {formik.errors.relatedMemberId}
+                          </p>
+                        )}
+
+                      {/* Buttons */}
+                      <div className="flex justify-between items-center mt-8">
+                        <button
+                          type="submit"
+                          className="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded-lg w-full"
+                        >
+                          {selectedMember ? "Update" : "Add"}
+                        </button>
+                      </div>
+
+                      <div className="flex justify-between items-center space-x-2">
+                        {!selectedMember && (
+                          <button
+                            type="button"
+                            className="bg-gray-500 hover:bg-gray-400 text-white px-4 py-2 rounded-lg w-1/2"
+                            onClick={() => formik.resetForm()}
+                          >
+                            Reset
+                          </button>
+                        )}
+
+                        <button
+                          type="button"
+                          className="bg-red-600 hover:bg-red-500 text-white px-4 py-2 rounded-lg w-1/2"
                           onClick={() => {
                             setIsAddMemberVisible(false);
                             formik.resetForm();
