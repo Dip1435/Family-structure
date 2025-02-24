@@ -40,7 +40,33 @@ const FamilyList = () => {
 
   const handleClearAll = () => {
     localStorage.clear("familyMembers");
-    setMember([]);
+    localStorage.setItem(
+      "familyMembers",
+      JSON.stringify([
+        {
+          id: "9fb795ad-ae54-42b3-a347-d3d1a5f50b06",
+          name: "dip",
+          dob: "2025-02-17",
+          gender: "Male",
+          relation: "Self",
+          relatedMemberId: "",
+        },
+      ])
+    );
+    setMember([
+      {
+        id: "9fb795ad-ae54-42b3-a347-d3d1a5f50b06",
+        name: "dip",
+        dob: "2025-02-17",
+        gender: "Male",
+        relation: "Self",
+        relatedMemberId: "",
+        children: [],
+        spouse: [],
+        parents: [],
+        siblings: [],
+      },
+    ]);
   };
 
   return (

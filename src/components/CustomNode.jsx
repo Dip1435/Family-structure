@@ -12,57 +12,49 @@ const NodeComponent = ({ data }) => {
     );
   const handleDeleteMember = (id) => {
     let familyMembers = JSON.parse(localStorage.getItem("familyMembers"));
-    // const memberToDelete = data.member.id === id;
-    // if (!memberToDelete) return;
-    // familyMembers = familyMembers.map((member) => {
-    //   return {
-    //     ...member,
-    //     parents: member.parents?.filter((parentId) => parentId !== id),
-    //     spouse: member.spouse === id ? null : member.spouse,
-    //     children: member.children?.filter((childId) => childId !== id), // Remove from children array
-    //   };
-    // });
-
-    // familyMembers = familyMembers.filter((member) => member.id !== id);
-    // localStorage.setItem("familyMembers", JSON.stringify(familyMembers));
 
     let updatedMembers = [...familyMembers];
 
-    Swal.fire({
-      title: "Are you sure?",
-      text: "You won't be able to revert this!",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#3085d6",
-      cancelButtonColor: "#d33",
-      confirmButtonText: "Yes, delete it!",
-    }).then((result) => {
-      if (result.isConfirmed) {
-        updatedMembers = updatedMembers.map((m) => {
-          return {
-            ...m,
-            spouse: m.spouse === id ? null : m.spouse, // Remove spouse
-            children: m.children?.filter((childId) => childId !== id), // Remove from children
-            parents: m.parents?.filter((parentId) => parentId !== id), // Remove from parents
-          };
-        });
-        updatedMembers = updatedMembers.filter((m) => m.id !== id);
-        data.setMember(updatedMembers);
+    !hasChildren
+      ? Swal.fire({
+          title: "Are you sure?",
+          text: "You won't be able to revert this!",
+          icon: "warning",
+          showCancelButton: true,
+          confirmButtonColor: "#3085d6",
+          cancelButtonColor: "#d33",
+          confirmButtonText: "Yes, delete it!",
+        }).then((result) => {
+          if (result.isConfirmed) {
+            updatedMembers = updatedMembers.map((m) => {
+              return {
+                ...m,
+                spouse: m.spouse === id ? null : m.spouse, // Remove spouse
+                children: m.children?.filter((childId) => childId !== id), // Remove from children
+                parents: m.parents?.filter((parentId) => parentId !== id), // Remove from parents
+                siblings: m.siblings?.filter((siblingId) => siblingId !== id), // Remove from siblings
+              };
+            });
+            updatedMembers = updatedMembers.filter((m) => m.id !== id);
+            data.setMember(updatedMembers);
 
-        localStorage.setItem("familyMembers", JSON.stringify(updatedMembers));
+            localStorage.setItem(
+              "familyMembers",
+              JSON.stringify(updatedMembers)
+            );
 
-        Swal.fire({
-          title: "Deleted!",
-          text: "Your file has been deleted.",
-          icon: "success",
+            Swal.fire({
+              title: "Deleted!",
+              text: "Your file has been deleted.",
+              icon: "success",
+            });
+          }
+        })
+      : Swal.fire({
+          title: "Error!",
+          text: "You can't delete this member because they have children.",
+          icon: "error",
         });
-      }
-    });
-    // : Swal.fire({
-    //     title: "Error!",
-    //     text: "You can't delete this member because they have children.",
-    //     icon: "error",
-    //   });
   };
 
   const handleEditMember = () => {

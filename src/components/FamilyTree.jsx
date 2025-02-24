@@ -1,16 +1,13 @@
-import { useCallback, useEffect, useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import ReactFlow, {
-  applyNodeChanges,
   Background,
   Controls,
-  getConnectedEdges,
-  getIncomers,
-  getOutgoers,
   useEdgesState,
   useNodesState,
 } from "reactflow";
 import NodeComponent from "./CustomNode";
 import { familyEdges, familyNodes } from "./Data/dummyData";
+import { layoutFromMap } from "entitree-flex";
 
 const FamilyTreeNode = ({
   member,
@@ -19,15 +16,15 @@ const FamilyTreeNode = ({
   setFormData,
   setIsAddMemberVisible,
 }) => {
-  const generateCoupleKey = (id1, id2) => [id1, id2].sort().join("-"); // Generate a unique key for a couple
+  const generateCoupleKey = (id1, id2) => [id1, id2]?.sort()?.join("-"); // Generate a unique key for a couple
 
   const coupleMap = new Map(); // Map to track couples
 
   member?.forEach((m) => {
-    if (m.spouse.length > 0) {
-      const coupleKey = generateCoupleKey(m.id, m.spouse);
-      coupleMap.set(m.id, coupleKey);
-      coupleMap.set(m.spouse, coupleKey);
+    if (m?.spouse?.length > 0) {
+      const coupleKey = generateCoupleKey(m?.id, m?.spouse);
+      coupleMap?.set(m?.id, coupleKey);
+      coupleMap?.set(m?.spouse, coupleKey);
     }
   });
 
@@ -42,28 +39,28 @@ const FamilyTreeNode = ({
       const [parent1, parent2] = parents.sort(); // Sort to maintain consistency
       const coupleKey = `${parent1}-${parent2}`;
 
-      if (!coupleMap.has(parent1) && !coupleMap.has(parent2)) {
-        coupleMap.set(parent1, coupleKey);
-        coupleMap.set(parent2, coupleKey);
+      if (!coupleMap?.has(parent1) && !coupleMap?.has(parent2)) {
+        coupleMap?.set(parent1, coupleKey);
+        coupleMap?.set(parent2, coupleKey);
       }
     }
 
     const father = parents?.find((p) => {
-      const parent = member.find((m) => m.id === p);
+      const parent = member?.find((m) => m?.id === p);
       return parent?.gender === "Male";
     });
     // Get mother second
     const mother = parents?.find((p) => {
-      const parent = member.find((m) => m.id === p);
+      const parent = member?.find((m) => m?.id === p);
       return parent?.gender === "Female";
     });
 
     const isSpouse = (father) =>
-      member?.find((m) => m.id === father)?.spouse?.length > 0;
+      member?.find((m) => m?.id === father)?.spouse?.length > 0;
 
     // Get couple keys if parents are in a couple
-    const fatherCoupleKey = father && coupleMap.get(father);
-    const motherCoupleKey = mother && coupleMap.get(mother);
+    const fatherCoupleKey = father && coupleMap?.get(father);
+    const motherCoupleKey = mother && coupleMap?.get(mother);
     const parentCoupleKey =
       fatherCoupleKey || motherCoupleKey || father || mother;
 
@@ -71,7 +68,7 @@ const FamilyTreeNode = ({
       edges.push({
         id: `edge-${id}-father`,
         source: isSpouse(father) ? parentCoupleKey : father,
-        target: memberCoupleKey(memb.id) ?? memb?.id, // If this member is in a couple, use their couple key
+        target: memberCoupleKey(memb?.id) ?? memb?.id, // If this member is in a couple, use their couple key
         type: "smoothstep",
         sourceHandle: "bottom",
         targetHandle: "top",
@@ -80,7 +77,7 @@ const FamilyTreeNode = ({
 
       allChildren?.forEach((child) => {
         edges.push({
-          id: `edge-${child.id}-${id}`,
+          id: `edge-${child?.id}-${id}`,
           source: parentCoupleKey,
           target: child?.id,
           type: "smoothstep",
@@ -93,17 +90,17 @@ const FamilyTreeNode = ({
       edges.push({
         id: `edge-${id}-mother`,
         source: parentCoupleKey,
-        target: memberCoupleKey(memb.id) || memb.id, // If this member is in a couple, use their couple key
+        target: memberCoupleKey(memb?.id) || memb?.id, // If this member is in a couple, use their couple key
         type: "smoothstep",
         sourceHandle: "bottom",
         targetHandle: "top",
       });
     }
     // Handle spouse connection
-    if (spouse.length > 0 && id < spouse) {
+    if (spouse?.length > 0 && id < spouse) {
       edges.push({
         id: `edge-${id}-spouse`,
-        source: memb.id,
+        source: memb?.id,
         target: spouse,
         type: "smoothstep",
         sourceHandle: "right",
@@ -113,110 +110,48 @@ const FamilyTreeNode = ({
     return edges;
   });
 
-  const positionNodes = () => {
-    let positions = {};
-    let siblingSpacing = 450; // Space between siblings
-    let generationSpacing = 280; // Space between generations
-    let spouseSpacing = 250; // Space between spouses
+  const entitreeSettings = {
+    clone: false, // returns a copy of the input, if your application does not allow editing the original object
+    enableFlex: false, // has slightly better perfomance if turned off (node.width, node.height will not be read)
+    firstDegreeSpacing: 180, // spacing in px between nodes belonging to the same source, eg children with same parent
+    nextAfterAccessor: "spouses", // the side node prop used to go sideways, AFTER the current node
+    nextAfterSpacing: 180, // the spacing of the "side" nodes AFTER the current node
+    nextBeforeAccessor: "siblings", // the side node prop used to go sideways, BEFORE the current node
+    nextBeforeSpacing: 200, // the spacing of the "side" nodes BEFORE the current node
+    nodeHeight: 40, // default node height in px
+    nodeWidth: 40, // default node width in px
+    orientation: "vertical", // "vertical" to see parents top and children bottom, "horizontal" to see parents left and
+    rootX: 0, // set root position if other than 0
+    rootY: 0, // set root position if other than 0
+    secondDegreeSpacing: 10, // spacing in px between nodes not belonging to same parent eg "cousin" nodes
+    sourcesAccessor: "parents", // the prop used as the array of ancestors ids
+    sourceTargetSpacing: 250, // the "vertical" spacing between nodes in vertical orientation, horizontal otherwise
+    targetsAccessor: "children", // the prop used as the array of children ids
+  };
+  const transformMembers = (members) => {
+    return members?.reduce((acc, member) => {
+      acc[member?.id] = {
+        ...member,
+        spouses: member?.spouse?.length > 0 ? [member?.spouse] : [], // Ensure spouses array exists
+        isSpouse: member?.spouse?.length > 0,
+        siblings: member?.siblings?.length > 0 ? member?.siblings : [], // Ensure siblings array exists
+        type: "custom",
+      };
+      delete acc[member?.id].spouse; // Remove original "spouse" key
 
-    let visited = new Set();
-
-    member?.forEach((memb) => {
-      if (visited.has(memb.id)) return;
-
-      let parentX = 0;
-      let parentY = 0;
-
-      // Place root members at (0,100)
-      if (!memb?.relatedMemberId) {
-        positions[memb.id] = { x: 0, y: 300 };
-      }
-
-      // Position Fathers
-      if (memb?.relation === "Father" && positions[memb?.relatedMemberId]) {
-        positions[memb.id] = {
-          x: positions[memb.relatedMemberId].x,
-          y: positions[memb.relatedMemberId].y - generationSpacing,
-        };
-        visited.add(memb.id);
-      }
-
-      // Position Mothers next to Fathers
-      if (memb.relation === "Mother" && positions[memb.relatedMemberId]) {
-        positions[memb.id] = {
-          x: positions[memb.relatedMemberId].x,
-          y: positions[memb.relatedMemberId].y - generationSpacing,
-        };
-        visited.add(memb.id);
-      }
-
-      // Position Spouses next to each other
-      if (
-        (memb.relation === "Wife" || memb.relation === "Husband") &&
-        positions[memb.relatedMemberId]
-      ) {
-        positions[memb.id] = {
-          x: positions[memb.relatedMemberId].x + spouseSpacing,
-          y: positions[memb.relatedMemberId].y,
-        };
-        visited.add(memb.id);
-      }
-
-      // Position Children below Parents
-      if (
-        (memb.relation === "Son" || memb.relation === "Daughter") &&
-        positions[memb.relatedMemberId]
-      ) {
-        parentX = positions[memb.relatedMemberId].x;
-        parentY = positions[memb.relatedMemberId].y;
-
-        // Get siblings count
-        let siblings = member?.filter(
-          (sibling) =>
-            sibling.relatedMemberId === memb.relatedMemberId &&
-            (sibling.relation === "Son" || sibling.relation === "Daughter")
-        );
-
-        let index = siblings.findIndex((s) => s.id === memb.id);
-
-        // Space out siblings evenly
-        positions[memb.id] = {
-          x: parentX + (index - siblings.length / 2) * siblingSpacing,
-          y: parentY + generationSpacing,
-        };
-        visited.add(memb.id);
-      }
-
-      // Position Brothers & Sisters next to each other
-      if (
-        (memb.relation === "Brother" || memb.relation === "Sister") &&
-        positions[memb.relatedMemberId]
-      ) {
-        parentX = positions[memb.relatedMemberId].x;
-        parentY = positions[memb.relatedMemberId].y;
-
-        let siblings = member?.filter(
-          (s) =>
-            s.relatedMemberId === memb.relatedMemberId &&
-            (s.relation === "Brother" || s.relation === "Sister")
-        );
-
-        let index = siblings.findIndex((s) => s.id === memb.id);
-
-        positions[memb.id] = {
-          x: parentX + (index - siblings.length / 2) * siblingSpacing,
-          y: parentY,
-        };
-        visited.add(memb.id);
-      }
-    });
-
-    return positions;
+      return acc;
+    }, {});
   };
 
-  const nodePositions = positionNodes();
+  const formatedData = transformMembers(member) || {};
 
-  const initialNodes = member?.map((member) => ({
+  const { nodes: entitreeNode } = layoutFromMap(
+    member[0]?.id,
+    formatedData,
+    entitreeSettings
+  );
+
+  const initialNodes = entitreeNode?.map((member) => ({
     id: member?.id,
     type: "custom",
     data: {
@@ -230,7 +165,7 @@ const FamilyTreeNode = ({
       setFormData: setFormData,
       setIsAddMemberVisible: setIsAddMemberVisible,
     },
-    position: nodePositions[member?.id] || { x: 0, y: 0 },
+    position: { x: member?.x || 0, y: member?.y || 0 },
   }));
 
   useEffect(() => {
@@ -259,18 +194,21 @@ const FamilyTreeNode = ({
         const spouseMember = member?.find((m) => m?.id === spouseId);
         if (!spouseMember) return;
 
-        // Create couple node
+        const nodePosition = entitreeNode?.find(
+          (node) => node?.id === memberId
+        );
+
         const coupleNode = {
           id: coupleKey,
           type: "default",
           data: null,
           position: {
-            x: nodePositions[memberId]?.x - 60 || 0,
-            y: nodePositions[memberId]?.y - 50 || 0,
+            x: nodePosition?.x || 0,
+            y: nodePosition?.y || 0,
           },
           style: {
-            width: 480,
-            height: 240,
+            width: 450,
+            height: 200,
             backgroundColor: "rgba(240,240,240,0.20)",
             borderColor: "oklch(0.627 0.265 303.9)",
           },
@@ -280,23 +218,30 @@ const FamilyTreeNode = ({
           ?.filter(
             (node) => node?.id === memberId || node?.id === spouseMember?.id
           )
-          ?.map((node) => ({
-            ...node,
-            parentId: coupleKey,
-            extent: "parent",
-            position: {
-              x: node.position.x + 20,
-              y: node.position.y + 200,
-            },
-          }));
+          ?.map((node) => {
+            // Get correct position from entitreeNode
+            const existingNode = entitreeNode.find((n) => n.id === node.id);
+            console.log(entitreeNode, "existingNode");
+            console.log(node, "Node");
+
+            return {
+              ...node,
+              parentId: coupleKey,
+              extent: "parent",
+              position: {
+                x: existingNode?.x + 110 || 0, // Use existing x position
+                y: existingNode?.y + 290 || 0, // Use existing y position
+              },
+            };
+          });
         setNodes((prevNodes) => [...prevNodes, coupleNode, ...coupleNodes]);
         setEdges((prevEdges) =>
           prevEdges.filter((edge) => {
             return !(
-              edge.source === memberId ||
-              edge.source === spouseId ||
-              edge.target === memberId ||
-              edge.target === spouseId
+              edge?.source === memberId ||
+              edge?.source === spouseId ||
+              edge?.target === memberId ||
+              edge?.target === spouseId
             );
           })
         );
@@ -311,18 +256,18 @@ const FamilyTreeNode = ({
     member?.forEach((memb) => {
       const { parents } = memb;
       const father = parents?.find((p) => {
-        const parent = member.find((m) => m.id === p);
+        const parent = member.find((m) => m?.id === p);
         return parent?.gender === "Male";
       });
       // Get mother second
       const mother = parents?.find((p) => {
-        const parent = member?.find((m) => m.id === p);
+        const parent = member?.find((m) => m?.id === p);
         return parent?.gender === "Female";
       });
 
       if (father && mother) {
         setEdges((prevEdges) => {
-          const newEdges = prevEdges.filter((edge) => edge.source !== mother);
+          const newEdges = prevEdges?.filter((edge) => edge?.source !== mother);
           return newEdges;
         });
       }

@@ -94,8 +94,9 @@ const AddMember = ({
         children: [],
         spouse: [],
         parents: [],
+        siblings: [],
       };
-
+      let siblings = [];
       if (selectedMember) {
         updatedMembers = updatedMembers.map((m) =>
           m.id === selectedMember.id ? { ...m, ...values } : m
@@ -116,7 +117,7 @@ const AddMember = ({
               };
             }
             if (values.relation === "Husband" || values.relation === "Wife") {
-              return { ...m, spouse: newMemberId };
+              return { ...m, spouse: newMemberId, isSpose: true };
             }
             if (values.relation === "Mother" || values.relation === "Father") {
               return {
@@ -133,28 +134,47 @@ const AddMember = ({
               return { ...m, spouse: values.relatedMemberId };
             }
             if (values.relation === "Son" || values.relation === "Daughter") {
+              const parentIds = [
+                ...new Set([...(m.parents || []), values.relatedMemberId]),
+              ];
+              siblings = updatedMembers
+                .filter(
+                  (member) =>
+                    member.parents?.some((parent) =>
+                      parentIds.includes(parent)
+                    ) && member.id !== newMemberId
+                )
+                .map((sibling) => sibling.id);
               return {
                 ...m,
                 parents: [
                   ...new Set([...(m.parents || []), values.relatedMemberId]),
                 ],
+                siblings: siblings,
               };
             }
             if (values.relation === "Brother" || values.relation === "Sister") {
               return { ...m, parents: [...(relatedMember.parents || [])] }; // Inherit parents
             }
             if (values.relation === "Father" || values.relation === "Mother") {
-              // const relatedMember = member?.find(
-              //   (m) => m.id === values.relatedMemberId
-              // );
               return {
                 ...m,
                 children: [
                   ...new Set([...(m.children || []), values.relatedMemberId]),
                 ],
-                // spouse: [...(relatedMember?.parents || [])],
               };
             }
+          }
+          return m;
+        });
+
+        updatedMembers = updatedMembers.map((m) => {
+          if (siblings.some((sibling) => sibling === m.id)) {
+            // Use the stored siblings array
+            return {
+              ...m,
+              siblings: [...new Set([...(m.siblings || []), newMemberId])],
+            };
           }
           return m;
         });
@@ -173,8 +193,50 @@ const AddMember = ({
               return parent;
             });
           });
-        }
 
+          // Add new sibling to existing siblings' siblings list
+          const newSiblingId = newMemberId;
+
+          // Find existing siblings (members with the same parents as the related person)
+          const existingSiblings = updatedMembers.filter((m) =>
+            relatedMember.parents?.some((parentId) =>
+              m.parents?.includes(parentId)
+            )
+          );
+          // Update the new sibling (add existing sibling IDs)
+          updatedMembers = updatedMembers.map((m) => {
+            if (m.id === newSiblingId) {
+              return {
+                ...m,
+                siblings: [
+                  ...new Set(
+                    existingSiblings
+                      .filter((s) => s.id != newSiblingId)
+                      .map((s) => s.id)
+                  ),
+                ],
+              };
+            }
+            if (m.id === values.relatedMemberId) {
+              return {
+                ...m,
+                siblings: [...new Set([...(m.siblings || []), newSiblingId])],
+                isSibling: true,
+              };
+            }
+            if (
+              existingSiblings.some((sibling) => sibling.id === m.id) &&
+              m.id !== newSiblingId
+            ) {
+              return {
+                ...m,
+                siblings: [...new Set([...(m.siblings || []), newSiblingId])],
+                isSibling: true,
+              };
+            }
+            return m;
+          });
+        }
         if (values.relation === "Mother" || values.relation === "Father") {
           const child = updatedMembers.find(
             (m) => m.id === values.relatedMemberId
