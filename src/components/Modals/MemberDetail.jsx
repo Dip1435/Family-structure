@@ -9,13 +9,7 @@ const MemberDetail = ({
   setIsOpenMemberDetail,
   isOpenmemberDetail,
   member,
-  setFormData,
-  setMember,
-  setIsAddMemberVisible,
-  setSelectedMember,
-
 }) => {
-  console.log(memberDetail);
   
   const findMember = (id) => member.find((m) => m.id === id);
 
