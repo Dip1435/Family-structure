@@ -5,6 +5,7 @@ import { GrClear } from "react-icons/gr";
 import { GrRefresh } from "react-icons/gr";
 import AddMember from "./Modals/AddMember";
 import MemberDetail from "./Modals/MemberDetail";
+import { v4 as uuidv4 } from "uuid";
 
 const FamilyList = () => {
   const [member, setMember] = useState(
@@ -44,7 +45,7 @@ const FamilyList = () => {
       "familyMembers",
       JSON.stringify([
         {
-          id: "9fb795ad-ae54-42b3-a347-d3d1a5f50b06",
+          id: uuidv4(),
           name: "dip",
           dob: "2025-02-17",
           gender: "Male",
@@ -55,7 +56,7 @@ const FamilyList = () => {
     );
     setMember([
       {
-        id: "9fb795ad-ae54-42b3-a347-d3d1a5f50b06",
+        id: uuidv4(),
         name: "dip",
         dob: "2025-02-17",
         gender: "Male",
@@ -92,7 +93,7 @@ const FamilyList = () => {
             <button
               className="p-4 shadow-lg bg-purple-500 hover:bg-purple-700 text-white rounded-lg cursor-pointer flex items-center justify-center gap-2"
               onClick={() => location.reload()}
-              title="clear all"
+              title="Reset"
             >
               <GrRefresh className="h-5 w-5" />
             </button>
@@ -145,6 +146,10 @@ const FamilyList = () => {
             setIsOpenMemberDetail={setIsOpenMemberDetail}
             isOpenmemberDetail={isOpenmemberDetail}
             member={member}
+            setMember={setMember}
+            setSelectedMember={setSelectedMember}
+            setFormData={setFormData}
+            setIsAddMemberVisible={setIsAddMemberVisible}
           />
         )}
       </div>

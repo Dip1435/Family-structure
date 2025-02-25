@@ -339,3 +339,14 @@ export const familyEdges = [
     type: "smoothstep",
   },
 ];
+
+export const rootMember = {
+  "9fb795ad-ae54-42b3-a347-d3d1a5f50b06": {
+    id: "9fb795ad-ae54-42b3-a347-d3d1a5f50b06",
+    name: "dip",
+    dob: "2025-02-17",
+    gender: "Male",
+    relation: "Self",
+    relatedMemberId: "",
+  },
+};

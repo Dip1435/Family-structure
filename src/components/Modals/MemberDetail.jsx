@@ -2,16 +2,92 @@ import { Dialog, Transition } from "@headlessui/react";
 import { Fragment } from "react";
 import { MdDelete, MdEditSquare } from "react-icons/md";
 import { IoMdCloseCircle } from "react-icons/io";
-import { FaBirthdayCake, FaFemale, FaMale, FaUsers, FaVenusMars } from "react-icons/fa";
+import {
+  FaBirthdayCake,
+  FaFemale,
+  FaMale,
+  FaUsers,
+  FaVenusMars,
+} from "react-icons/fa";
 import Swal from "sweetalert2";
 const MemberDetail = ({
   memberDetail,
   setIsOpenMemberDetail,
   isOpenmemberDetail,
   member,
+  setMember,
+  setSelectedMember,
+  setFormData,
+  setIsAddMemberVisible,
 }) => {
-  
   const findMember = (id) => member.find((m) => m.id === id);
+
+  const hasChildren =
+    memberDetail?.children?.length > 0 &&
+    (memberDetail.relation === "Father" || memberDetail.relation === "Self") &&
+    !(memberDetail?.children?.length === 1 && memberDetail?.children[0] === memberDetail?.id);
+
+  const isRoot = memberDetail?.relation === "Self";
+  const handleDeleteMember = (id) => {
+    let familyMembers = JSON.parse(localStorage.getItem("familyMembers"));
+
+    let updatedMembers = [...familyMembers];
+
+    !hasChildren && !isRoot
+      ? Swal.fire({
+          title: "Are you sure?",
+          text: "You won't be able to revert this!",
+          icon: "warning",
+          showCancelButton: true,
+          confirmButtonColor: "#3085d6",
+          cancelButtonColor: "#d33",
+          confirmButtonText: "Yes, delete it!",
+        }).then((result) => {
+          if (result.isConfirmed) {
+            updatedMembers = updatedMembers.map((m) => {
+              return {
+                ...m,
+                spouse: m.spouse === id ? null : m.spouse, // Remove spouse
+                children: m.children?.filter((childId) => childId !== id), // Remove from children
+                parents: m.parents?.filter((parentId) => parentId !== id), // Remove from parents
+                siblings: m.siblings?.filter((siblingId) => siblingId !== id), // Remove from siblings
+              };
+            });
+            updatedMembers = updatedMembers.filter((m) => m.id !== id);
+            setMember(updatedMembers);
+
+            localStorage.setItem(
+              "familyMembers",
+              JSON.stringify(updatedMembers)
+            );
+
+            Swal.fire({
+              title: "Deleted!",
+              text: "Your file has been deleted.",
+              icon: "success",
+            });
+          }
+        })
+      : isRoot
+      ? Swal.fire({
+          title: "Error!",
+          text: "You can't delete root member.",
+          icon: "error",
+        })
+      : Swal.fire({
+          title: "Error!",
+          text: "You can't delete this member because they have children.",
+          icon: "error",
+        });
+        setIsOpenMemberDetail(false);
+  };
+
+  const handleEditMember = () => {
+    setSelectedMember(memberDetail);
+    setFormData(memberDetail);
+    setIsAddMemberVisible(true);
+    setIsOpenMemberDetail(false);
+  };
 
   return (
     <>
@@ -51,39 +127,6 @@ const MemberDetail = ({
                       onClick={() => setIsOpenMemberDetail(false)}
                     />
                   </Dialog.Title>
-                  {/* <div className="bg-white rounded-lg space-y-3">
-                    <p className="text-lg font-bold">
-                      Name :{" "}
-                      <span className="text-lg font-medium">
-                        {" "}
-                        {memberDetail?.name}{" "}
-                      </span>
-                    </p>
-                    <p className="text-lg font-bold">
-                      Gender :{" "}
-                      <span className="text-lg font-medium">
-                        {" "}
-                        {memberDetail?.gender}{" "}
-                      </span>
-                    </p>
-                    <p className="text-lg font-bold">
-                      Born :{" "}
-                      <span className="text-lg font-medium">
-                        {" "}
-                        {memberDetail?.dob}{" "}
-                      </span>
-                    </p>
-                    <p className="text-lg font-bold">
-                      Relation:{" "}
-                      <span className="text-lg font-medium">
-                        {memberDetail?.relation === "Self"
-                          ? "Self"
-                          : `${memberDetail?.relation} of ${
-                              findMember(memberDetail?.relatedMemberId)?.name
-                            }`}
-                      </span>
-                    </p>
-                  </div> */}
                   <div className="bg-white rounded-lg shadow-lg p-6 w-80 mx-auto">
                     <div className="flex flex-col items-center space-y-3">
                       {/* Avatar (Optional) */}
@@ -127,16 +170,22 @@ const MemberDetail = ({
                       </div>
 
                       {/* Buttons */}
-                      {/* <div className="flex justify-center gap-4 mt-4">
-                        <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg shadow-md hover:bg-blue-500" onClick={handleEditMember}>
+                      <div className="flex justify-center gap-4 mt-4">
+                        <button
+                          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg shadow-md hover:bg-blue-500"
+                          onClick={handleEditMember}
+                        >
                           <MdEditSquare className="text-lg" />
                           Edit
                         </button>
-                        <button className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg shadow-md hover:bg-red-500" onClick={() => handleDeleteMember(memberDetail?.id)}>
+                        <button
+                          className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg shadow-md hover:bg-red-500"
+                          onClick={() => handleDeleteMember(memberDetail?.id)}
+                        >
                           <MdDelete className="text-lg" />
                           Delete
                         </button>
-                      </div> */}
+                      </div>
                     </div>
                   </div>
                 </Dialog.Panel>

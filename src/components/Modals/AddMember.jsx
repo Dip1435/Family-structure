@@ -117,7 +117,7 @@ const AddMember = ({
               };
             }
             if (values.relation === "Husband" || values.relation === "Wife") {
-              return { ...m, spouse: newMemberId, isSpose: true };
+              return { ...m, spouse: newMemberId};
             }
             if (values.relation === "Mother" || values.relation === "Father") {
               return {

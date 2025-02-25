@@ -10,12 +10,14 @@ const NodeComponent = ({ data }) => {
       data?.member?.children?.length === 1 &&
       data?.member?.children[0] === data?.member?.id
     );
+
+  const isRoot = data?.member?.relation === "Self";
   const handleDeleteMember = (id) => {
     let familyMembers = JSON.parse(localStorage.getItem("familyMembers"));
 
     let updatedMembers = [...familyMembers];
 
-    !hasChildren
+    !hasChildren && !isRoot
       ? Swal.fire({
           title: "Are you sure?",
           text: "You won't be able to revert this!",
@@ -49,6 +51,12 @@ const NodeComponent = ({ data }) => {
               icon: "success",
             });
           }
+        })
+      : isRoot
+      ? Swal.fire({
+          title: "Error!",
+          text: "You can't delete root member.",
+          icon: "error",
         })
       : Swal.fire({
           title: "Error!",
