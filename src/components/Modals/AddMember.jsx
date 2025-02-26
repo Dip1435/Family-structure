@@ -108,6 +108,16 @@ const AddMember = ({
         formik.resetForm();
       }
       if (relatedMember) {
+        const rootMembers = updatedMembers?.filter((m) => m?.parents?.length === 0 && m?.gender === "Male");
+        console.log("🚀 ~ rootMembers:", updatedMembers)
+
+        if ((values?.relation === "Father" || values?.relation === "Mother") && values?.gender === "Male") {
+          updatedMembers = updatedMembers.map((member) => ({
+            ...member,
+            isRoot: false, // Ensure all previous root members are set to false
+          }));
+        }
+
         updatedMembers = updatedMembers?.map((m) => {
           if (m.id === values.relatedMemberId) {
             if (values.relation === "Son" || values.relation === "Daughter") {
@@ -117,12 +127,13 @@ const AddMember = ({
               };
             }
             if (values.relation === "Husband" || values.relation === "Wife") {
-              return { ...m, spouse: newMemberId};
+              return { ...m, spouse: newMemberId };
             }
             if (values.relation === "Mother" || values.relation === "Father") {
               return {
                 ...m,
                 parents: [...new Set([...(m.parents || []), newMemberId])],
+                isRoot: false,
               };
             }
           }
@@ -162,6 +173,7 @@ const AddMember = ({
                 children: [
                   ...new Set([...(m.children || []), values.relatedMemberId]),
                 ],
+                isRoot: true,
               };
             }
           }
@@ -170,7 +182,6 @@ const AddMember = ({
 
         updatedMembers = updatedMembers.map((m) => {
           if (siblings.some((sibling) => sibling === m.id)) {
-            // Use the stored siblings array
             return {
               ...m,
               siblings: [...new Set([...(m.siblings || []), newMemberId])],
@@ -300,123 +311,6 @@ const AddMember = ({
                   >
                     Add Member
                   </Dialog.Title>
-                  {/* <div className="bg-white rounded-lg">
-                    <form
-                      onSubmit={formik.handleSubmit}
-                      className="flex flex-col gap-4 p-5"
-                    >
-                      <input
-                        type="text"
-                        placeholder="Name"
-                        name="name"
-                        value={formik.values.name}
-                        onChange={formik.handleChange}
-                        // autoComplete="off"
-                        className="outline rounded-lg p-2"
-                      />
-                      {formik.touched.name && formik.errors.name && (
-                        <p className="text-red-500">{formik.errors.name}</p>
-                      )}
-
-                      <input
-                        type="date"
-                        name="dob"
-                        value={formik.values.dob}
-                        onChange={formik.handleChange}
-                        className="outline rounded-lg p-2"
-                      />
-                      {formik.touched.dob && formik.errors.dob && (
-                        <p className="text-red-500">{formik.errors.dob}</p>
-                      )}
-
-                      <select
-                        name="gender"
-                        value={formik.values.gender}
-                        onChange={formik.handleChange}
-                        className="outline p-2 rounded-lg"
-                      >
-                        <option value="">Select Gender</option>
-                        <option value="Male">Male</option>
-                        <option value="Female">Female</option>
-                      </select>
-                      {formik.touched.gender && formik.errors.gender && (
-                        <p className="text-red-500">{formik.errors.gender}</p>
-                      )}
-                      <select
-                        name="relation"
-                        value={formik.values.relation}
-                        onChange={formik.handleChange}
-                        className="border p-2 rounded-lg"
-                      >
-                        <option value="">Select Relation</option>
-                        {(formik.values.gender === "Male"
-                          ? femaleRelations
-                          : maleRelations
-                        )
-                          ?.filter(
-                            (relation) => relation !== "Self" || !hasRootMember
-                          )
-                          ?.map((relation) => (
-                            <option key={relation} value={relation}>
-                              {relation}
-                            </option>
-                          ))}
-                      </select>
-                      {formik.touched.relation && formik.errors.relation && (
-                        <p className="text-red-500">{formik.errors.relation}</p>
-                      )}
-
-                      {formik.values.relation &&
-                        formik.values.relation !== "Self" && (
-                          <select
-                            name="relatedMemberId"
-                            value={formik.values.relatedMemberId}
-                            onChange={formik.handleChange}
-                            className="border p-2 rounded-lg"
-                          >
-                            <option value="">Select Related Member</option>
-                            {member?.map((m) => (
-                              <option key={m.id} value={m.id}>
-                                {m.name}
-                              </option>
-                            ))}
-                          </select>
-                        )}
-                      {formik.touched.relatedMemberId &&
-                        formik.errors.relatedMemberId && (
-                          <p className="text-red-500">
-                            {formik.errors.relatedMemberId}
-                          </p>
-                        )}
-                      <div className="flex justify-start items-center gap-4">
-                        <button
-                          type="submit"
-                          className="bg-green-600 text-white px-4 py-2 rounded-lg"
-                        >
-                          {selectedMember ? "Update" : "Add"}
-                        </button>
-                        <button
-                          className={`bg-red-600 ${
-                            selectedMember ? "hidden" : "block"
-                          } text-white px-4 py-2 rounded-lg`}
-                          onClick={() => {
-                            formik.resetForm();
-                          }}
-                        >
-                          Reset
-                        </button>
-                        <button
-                          className={`bg-red-600 text-white px-4 py-2 rounded-lg`}
-                          onClick={() => {
-                            setIsAddMemberVisible(false);
-                            formik.resetForm();
-                          }}
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    </form>
-                  </div> */}
                   <div className="bg-white rounded-lg shadow-md max-w-md mx-auto p-6">
                     <form
                       onSubmit={formik.handleSubmit}

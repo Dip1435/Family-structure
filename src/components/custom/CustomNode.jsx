@@ -11,13 +11,14 @@ const NodeComponent = ({ data }) => {
       data?.member?.children[0] === data?.member?.id
     );
 
-  const isRoot = data?.member?.relation === "Self";
+  const isRoot = data?.member?.isRoot === true;
   const handleDeleteMember = (id) => {
     let familyMembers = JSON.parse(localStorage.getItem("familyMembers"));
-
+    const hasWife = Boolean(data?.member.spouses.length && data?.member.gender === "Male");
+    console.log(hasWife);
     let updatedMembers = [...familyMembers];
 
-    !hasChildren && !isRoot
+    !hasChildren && !isRoot && !hasWife
       ? Swal.fire({
           title: "Are you sure?",
           text: "You won't be able to revert this!",
@@ -31,7 +32,7 @@ const NodeComponent = ({ data }) => {
             updatedMembers = updatedMembers.map((m) => {
               return {
                 ...m,
-                spouse: m.spouse === id ? null : m.spouse, // Remove spouse
+                spouse: m.spouse === id ? [] : m.spouse, // Remove spouse
                 children: m.children?.filter((childId) => childId !== id), // Remove from children
                 parents: m.parents?.filter((parentId) => parentId !== id), // Remove from parents
                 siblings: m.siblings?.filter((siblingId) => siblingId !== id), // Remove from siblings
@@ -56,6 +57,12 @@ const NodeComponent = ({ data }) => {
       ? Swal.fire({
           title: "Error!",
           text: "You can't delete root member.",
+          icon: "error",
+        })
+      : hasWife
+      ? Swal.fire({
+          title: "Error!",
+          text: "You can't delete this member because they have wife.",
           icon: "error",
         })
       : Swal.fire({

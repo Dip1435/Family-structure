@@ -47,7 +47,7 @@ const MemberDetail = ({
             updatedMembers = updatedMembers.map((m) => {
               return {
                 ...m,
-                spouse: m.spouse === id ? null : m.spouse, // Remove spouse
+                spouse: m.spouse === id ? [] : m?.spouse, // Remove spouse
                 children: m.children?.filter((childId) => childId !== id), // Remove from children
                 parents: m.parents?.filter((parentId) => parentId !== id), // Remove from parents
                 siblings: m.siblings?.filter((siblingId) => siblingId !== id), // Remove from siblings

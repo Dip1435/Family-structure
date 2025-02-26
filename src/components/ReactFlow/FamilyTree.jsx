@@ -2,12 +2,11 @@ import { useEffect, useMemo } from "react";
 import ReactFlow, {
   Background,
   Controls,
-  MiniMap,
   useEdgesState,
   useNodesState,
 } from "reactflow";
-import NodeComponent from "./CustomNode";
-import { familyEdges, familyNodes, rootMember } from "./Data/dummyData";
+import NodeComponent from "../custom/CustomNode";
+import { entitreeSettings, familyEdges, familyNodes } from "../Data/dummyData";
 import { layoutFromMap } from "entitree-flex";
 
 const FamilyTreeNode = ({
@@ -19,7 +18,7 @@ const FamilyTreeNode = ({
 }) => {
   const generateCoupleKey = (id1, id2) => [id1, id2]?.sort()?.join("-"); // Generate a unique key for a couple
 
-  const coupleMap = new Map(); // Map to track couples
+  const coupleMap = new Map();
 
   member?.forEach((m) => {
     if (m?.spouse?.length > 0) {
@@ -111,80 +110,32 @@ const FamilyTreeNode = ({
     return edges;
   });
 
-  const entitreeSettings = {
-    clone: false, // returns a copy of the input, if your application does not allow editing the original object
-    enableFlex: false, // has slightly better perfomance if turned off (node.width, node.height will not be read)
-    firstDegreeSpacing: 180, // spacing in px between nodes belonging to the same source, eg children with same parent
-    nextAfterAccessor: "spouses", // the side node prop used to go sideways, AFTER the current node
-    nextAfterSpacing: 180, // the spacing of the "side" nodes AFTER the current node
-    nextBeforeAccessor: "siblings", // the side node prop used to go sideways, BEFORE the current node
-    nextBeforeSpacing: 430, // the spacing of the "side" nodes BEFORE the current node
-    nodeHeight: 40, // default node height in px
-    nodeWidth: 40, // default node width in px
-    orientation: "vertical", // "vertical" to see parents top and children bottom, "horizontal" to see parents left and
-    rootX: 0, // set root position if other than 0
-    rootY: 0, // set root position if other than 0
-    secondDegreeSpacing: 10, // spacing in px between nodes not belonging to same parent eg "cousin" nodes
-    sourcesAccessor: "parents", // the prop used as the array of ancestors ids
-    sourceTargetSpacing: 250, // the "vertical" spacing between nodes in vertical orientation, horizontal otherwise
-    targetsAccessor: "children", // the prop used as the array of children ids
-  };
-  // const transformMembers = (members) => {
-
-  //   return members?.reduce((acc, member) => {
-  //     acc[member?.id] = {
-  //       ...member,
-  //       spouses: member?.spouse?.length > 0 ? [member?.spouse] : [], // Ensure spouse array exists
-  //       isSpouse: member?.spouse?.length > 0,
-  //       // siblings: member?.siblings?.length > 0 ? member?.siblings : [], // Ensure siblings array exists
-  //       type: "custom",
-  //     };
-  //     delete acc[member?.id].spouse; // Remove original "spouse" key
-
-  //     return acc;
-  //   }, {});
-  // };
-
-  // const formatedData =
-  //   member.length > 0 ? transformMembers(member) : rootMember;
-  // console.log("entitreeNode", formatedData);
-
-  // const { nodes: entitreeNode } = layoutFromMap(
-  //   member[0]?.id,
-  //   formatedData,
-  //   entitreeSettings
-  // );
-
-  // const uniqueNodes = [...new Set(entitreeNode.map((node) => node))];
+ 
   const transformMembers = () => {
     return member?.reduce((acc, member) => {
       acc[member?.id] = {
         ...member,
         spouses: member?.spouse?.length > 0 ? [member?.spouse] : [], // Store spouse as array
         isSpouse: Boolean(member?.spouse?.length > 0),
+        children: member?.children ?? [],
+        parents: member?.parents ?? [],
         type: "custom",
       };
-
-      // Ensure floating members are connected
-      if (!member.spouse && !member.parent) {
-        acc[member.id].parent = "Self";
-        acc["Self"] = { id: "Self", name: "Root Node", type: "custom" };
-      }
 
       delete acc[member?.id].spouse; // Remove original spouse key
       return acc;
     }, {});
   };
 
-  const formatedData =
-    member.length > 0 ? transformMembers() : rootMember;
-  const rootId = member.find((m) => m.relation === "Self")?.id;
+  const formatedData = transformMembers(); // Transform member data for Entitree
+  const rootId = member?.find((m) => m?.isRoot)?.id; // Find the root node
+
   const { nodes: entitreeNode } = layoutFromMap(rootId, formatedData, {
     ...entitreeSettings,
   });
+  const uniqueNodes = [...new Set(entitreeNode.map((node) => node))];
 
-
-  const initialNodes = entitreeNode?.map((member) => ({
+  const initialNodes = uniqueNodes?.map((member) => ({
     id: member?.id,
     type: "custom",
     data: {
@@ -199,84 +150,8 @@ const FamilyTreeNode = ({
       setIsAddMemberVisible: setIsAddMemberVisible,
     },
     position: { x: member?.x || 0, y: member?.y || 0 },
+    draggable: false,
   }));
-
-  // useEffect(() => {
-  //   if (member?.length > 0) {
-  //     setNodes(initialNodes);
-  //     setEdges(initialEdges);
-  //   } else {
-  //     setNodes(familyNodes);
-  //     setEdges(familyEdges);
-  //   }
-  // }, [member]);
-
-  // useEffect(() => {
-  //   const coupleSet = new Set();
-  //   member?.forEach((mem) => {
-  //     const { spouse } = mem;
-  //     if (spouse?.length > 0) {
-  //       const spouseId = spouse;
-  //       const memberId = mem?.id;
-
-  //       // Ensure the couple node is created only once
-  //       const coupleKey = [memberId, spouseId]?.sort()?.join("-");
-  //       if (coupleSet?.has(coupleKey)) return;
-  //       coupleSet?.add(coupleKey);
-  //       const spouseMember = member?.find((m) => m?.id === spouseId);
-  //       if (!spouseMember) return;
-
-  //       const nodePosition = entitreeNode?.find(
-  //         (node) => node?.id === memberId
-  //       );
-
-  //       const coupleNode = {
-  //         id: coupleKey,
-  //         type: "default",
-  //         data: null,
-  //         position: {
-  //           x: nodePosition?.x || 0,
-  //           y: nodePosition?.y || 0,
-  //         },
-  //         style: {
-  //           width: 450,
-  //           height: 200,
-  //           backgroundColor: "rgba(240,240,240,0.20)",
-  //           borderColor: "oklch(0.627 0.265 303.9)",
-  //         },
-  //       };
-  //       const coupleNodes = nodes
-  //         ?.filter(
-  //           (node) => node?.id === memberId || node?.id === spouseMember?.id
-  //         )
-  //         ?.map((node, index) => {
-  //           const existingNode = entitreeNode.find((n) => n.id === node.id);
-  //           return {
-  //             ...node,
-  //             parentId: coupleKey,
-  //             extent: "parent",
-  //             position: {
-  //               x: existingNode.x + 110, // Use existing x position
-  //               y: existingNode.y + 250, // Use existing y position
-  //             },
-  //           };
-  //         });
-  //       console.log(coupleNodes);
-
-  //       setNodes((prevNodes) => [...prevNodes, coupleNode, ...coupleNodes]);
-  //       setEdges((prevEdges) =>
-  //         prevEdges.filter((edge) => {
-  //           return !(
-  //             edge?.source === memberId ||
-  //             edge?.source === spouseId ||
-  //             edge?.target === memberId ||
-  //             edge?.target === spouseId
-  //           );
-  //         })
-  //       );
-  //     }
-  //   });
-  // }, [member]);
 
   useEffect(() => {
     if (member?.length > 0) {
@@ -312,6 +187,7 @@ const FamilyTreeNode = ({
               id: coupleKey,
               type: "default",
               data: null,
+              draggable: false,
               position: {
                 x: nodePosition?.x || 0,
                 y: nodePosition?.y || 0,
@@ -333,12 +209,13 @@ const FamilyTreeNode = ({
                   ...node,
                   parentId: coupleKey,
                   extent: "parent",
-                  draggable: true, // Allow individual nodes to move
+                  draggable: true,
                   selectable: true,
                   position: {
-                    x: index % 2 == 0 ? 10 : index % 2 != 0 && 250, // Position members inside the couple box
-                    y: 5, // Keep them inside the box
+                    x: index % 2 == 0 ? 10 : index % 2 != 0 && 250,
+                    y: 5,
                   },
+                  selected: true,
                 };
               });
 
@@ -398,7 +275,6 @@ const FamilyTreeNode = ({
         fitView
       >
         <Background />
-        <MiniMap />
         <Controls />
       </ReactFlow>
     </div>
