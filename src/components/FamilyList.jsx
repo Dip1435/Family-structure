@@ -8,8 +8,26 @@ import MemberDetail from "./Modals/MemberDetail";
 import { v4 as uuidv4 } from "uuid";
 
 const FamilyList = () => {
+
+const defaultMember = {
+  id: uuidv4(),
+  name: "dip",
+  dob: "2025-02-17",
+  gender: "Male",
+  relation: "Self",
+  relatedMemberId: "",
+}
+  const loadMembers = () => {
+    const storedMembers = localStorage.getItem("familyMembers");
+    if (!storedMembers) {
+      localStorage.setItem("familyMembers", JSON.stringify([defaultMember]));
+      return [defaultMember];
+    }
+    return JSON.parse(storedMembers);
+  };
+
   const [member, setMember] = useState(
-    JSON.parse(localStorage.getItem("familyMembers")) || []
+    loadMembers() || []
   );
 
   const [formData, setFormData] = useState({
@@ -24,12 +42,7 @@ const FamilyList = () => {
   const [isOpenmemberDetail, setIsOpenMemberDetail] = useState(false);
   const [memberDetail, setMemberDetail] = useState(null);
 
-  useEffect(() => {
-    const storedMembers =
-      JSON.parse(localStorage.getItem("familyMembers")) || [];
-    setMember(storedMembers);
-  }, []);
-
+ 
   useEffect(() => {
     localStorage.setItem("familyMembers", JSON.stringify(member));
   }, [member]);
